@@ -29,7 +29,7 @@ window.onload = function init() {
     var _projection = gl.getUniformLocation(program, "projection");
     var _modelView = gl.getUniformLocation(program, "modelView");
     var _color = gl.getUniformLocation(program, "color");
-    
+    var _normal = gl.getAttribLocation(program, "normal");
     //  Initial setup
     
     var groundSize = 500.0;
@@ -55,6 +55,17 @@ window.onload = function init() {
                0.5, 0.0, 0.0,
                0.0, 20.0, 0.0];
     
+    var normal = [-0.5, 0.0, 0.5, //not really normals
+                  -0.5, 0.0, 0.5,
+                  -0.5, 0.0, 0.5,
+                  0.5 ,0.0, 0.5,
+                  0.5, 0.0, 0.5,
+                  0.5, 0.0, 0.5,
+                  0.0, 0.0, -1.0,
+                  0.0, 0.0, -1.0,
+                  0.0, 0.0, -1.0,
+                ]
+    
     var location = [];         //locations of geometries
     for (var i = 0; i < geoNumber; i++) {
         var x = (Math.random() -0.5) * groundSize;
@@ -66,11 +77,11 @@ window.onload = function init() {
     // Create buffers
     var groundBuffer = gl.createBuffer();
     var geoBuffer = gl.createBuffer();
-    
+    var normalBuffer = gl.createBuffer();
     
 
     gl.enableVertexAttribArray(_vPosition);
-    
+    gl.enableVertexAttribArray(_normal);
     
     
     document.addEventListener('keydown', function(event) {
@@ -104,17 +115,25 @@ window.onload = function init() {
         gl.uniform4fv(_color, flatten(vec4(0.5, 0.5, 0.5, 1.0)));
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         
+
+        //for (var i = 0; i < 20; i++) {
+        //    gl.uniformMatrix4fv(_modelView, false, flatten(location[i]));
+        //    gl.drawArrays(gl.TRIANGLES, 0, 9);
+        //}
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(normal), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false, 0, 0);
+        
+        
         // Draw geometries
         gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
         gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
         gl.uniformMatrix4fv(_camera, false, flatten(camera));
         gl.uniformMatrix4fv(_projection, false, flatten(projection));
-        gl.uniform4fv(_color, flatten(vec4(1.0, 0.0, 0.0, 1.0)));
-        //for (var i = 0; i < 20; i++) {
-        //    gl.uniformMatrix4fv(_modelView, false, flatten(location[i]));
-        //    gl.drawArrays(gl.TRIANGLES, 0, 9);
-        //}
+        gl.uniform4fv(_color, flatten(vec4(0.3, 0.3, 0.3, 1.0)));
+        
+        
         
         
         for (var i = 0; i < location.length; i++) {
@@ -135,7 +154,6 @@ window.onload = function init() {
         
         
         var len = location.length
-        console.log(len);
         while (len < geoNumber) {
             var coin = Math.random();
             if (coin > 0.5) {
@@ -152,7 +170,6 @@ window.onload = function init() {
                 location.push(translate(-x, y, z));
             }
         }
-        console.log(len)
 
  
     }
