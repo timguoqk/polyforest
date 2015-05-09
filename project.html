@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-    <title>HW1</title>
+    <title>Team18-Term-Project</title>
     <script id="vertex-shader" type="x-shader/x-vertex">
         attribute vec3 vPosition;
         attribute vec3 normal;
@@ -15,7 +14,6 @@
         void main() {
             gl_Position = projection * camera * modelView * vec4(vPosition,1.);
             fColor = vec4(color.xyz + max(dot(normalize(normal), normalize(vec3(1.0, 0.0, 1.0))), 0.0) * vec3(1.0, 1.0, 1.0), 1.0);
-
         }
     </script>
     <script id="fragment-shader" type="x-shader/x-fragment">
