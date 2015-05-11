@@ -2,8 +2,8 @@ var gl;
 var groundSize, ground, groundBuffer;
 var geoNumber, geo, geoBuffer;
 var normals, normalBuffer;
-var projection, camera
-var locations = [];         //locations of geometries
+var projection, camera;
+var locations = [];  //locations of geometries
 var time_old = 0;
 var _camera, _vPosition, _projection, _modelView, _color, _normal; //handles
 
@@ -51,7 +51,7 @@ window.onload = function() {
     gl.enableVertexAttribArray(_normal);
     
     document.addEventListener('keydown', keyHandler);
-    
+    window.ondeviceorientation = gyroscopeHandler;
     animate(0);
 };
 
@@ -180,6 +180,17 @@ function keyHandler(event) {
             render();
             break;
     }
+}
+
+function gyroscopeHandler(event) {
+    // TODO: use variables not numbers
+    alpha = Math.round(event.alpha);
+    beta = Math.round(event.beta);
+    gamma = Math.round(event.gamma);
+    camera = translate(0.0, -0.5, 0.0);
+    // camera = mult(camera, rotate(alpha, [1, 0, 0]));
+    camera = mult(camera, rotate(beta, [0, 1, 0]));
+    // camera = mult(camera, rotate(gamma, [0, 0, 1]));
 }
 
 /******** Utility  ********/
