@@ -193,15 +193,16 @@ function keyUp(event) {
     }
 }
 
+var betaHistory = [];
 function gyroscopeHandler(event) {
-    // TODO: use variables not numbers
-    alpha = Math.round(event.alpha);
-    beta = Math.round(event.beta);
-    gamma = Math.round(event.gamma);
+    betaHistory.push(Math.round(event.beta));
+    if (betaHistory.length > 5)
+        betaHistory.shift();
+    var beta = betaHistory.reduce(function(prev, current) {
+        return (prev + current) / 2;
+    });
     camera = translate(0.0, -0.5, 0.0);
-    // camera = mult(camera, rotate(alpha, [1, 0, 0]));
     camera = mult(camera, rotate(beta, [0, 1, 0]));
-    // camera = mult(camera, rotate(gamma, [0, 0, 1]));
 }
 
 /******** Utility  ********/
