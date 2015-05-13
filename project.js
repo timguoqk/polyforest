@@ -100,9 +100,9 @@ function animate(time) {
     for (var i = 0; i < locations.length; i++) {
         locations[i] = mult(translate(0.0, 0.0, 0.01 * dt), locations[i]);
         if (key.left)
-            locations[i] = mult(rotate(-0.01 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
+            locations[i] = mult(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
         else if (key.right)
-            locations[i] = mult(rotate(0.01 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
+            locations[i] = mult(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
     }
     render();
     window.requestAnimationFrame(animate);
