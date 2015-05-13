@@ -6,6 +6,7 @@ var projection, camera;
 var locations = [];  //locations of geometries
 var time_old = 0;
 var _camera, _vPosition, _projection, _modelView, _color, _normal; //handles
+var key = {left: false, right: false, up: false, down: false};
 
 window.onload = function() {
     var canvas = document.getElementById("gl-canvas");
@@ -51,6 +52,7 @@ window.onload = function() {
     gl.enableVertexAttribArray(_normal);
     
     document.addEventListener('keydown', keyHandler);
+    document.addEventListener('keyup', keyUp);
     window.ondeviceorientation = gyroscopeHandler;
     animate(0);
 };
@@ -97,6 +99,10 @@ function animate(time) {
     //camera = mult(translate(0.0, 0.0, 0.01 * dt), camera);
     for (var i = 0; i < locations.length; i++) {
         locations[i] = mult(translate(0.0, 0.0, 0.01 * dt), locations[i]);
+        if (key.left)
+            locations[i] = mult(rotate(-0.01 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
+        else if (key.right)
+            locations[i] = mult(rotate(0.01 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
     }
     render();
     window.requestAnimationFrame(animate);
@@ -167,17 +173,22 @@ function render() {
 
 function keyHandler(event) {
     switch (event.keyCode){
-        case 37:
-            for (var i = 0; i < locations.length; i++) {
-                locations[i] = mult(rotate(-1, vec3(0.0, 1.0, 0.0)),locations[i])
-            }
-            render();
+        case 37:  // left arrow
+            key.left = true;
             break;
-        case 39:
-            for (var i = 0; i < locations.length; i++) {
-                locations[i] = mult(rotate(1, vec3(0.0, 1.0, 0.0)),locations[i])
-            }
-            render();
+        case 39:  // right arrow
+            key.right = true;
+            break;
+    }
+}
+
+function keyUp(event) {
+    switch (event.keyCode){
+        case 37:  // left arrow
+            key.left = false;
+            break;
+        case 39:  // right arrow
+            key.right = false;
             break;
     }
 }
