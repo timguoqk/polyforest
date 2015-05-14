@@ -58,7 +58,7 @@ window.onload = function() {
 };
 
 function initialSetup() {
-    groundSize = 500.0;
+    groundSize = 200.0;
     geoNumber = 300;  // Total number of geometries
     
     camera = translate(0.0, -0.5, 0.0);
