@@ -3,6 +3,7 @@ var groundSize, ground, groundBuffer;
 var geoNumber, geo, geoBuffer;
 var normals, normalBuffer;
 var projection, camera;
+var inv_projection;
 var locations = [];  //locations of geometries
 var time_old = 0;
 var _camera, _vPosition, _projection, _modelView, _color, _normal; //handles
@@ -63,6 +64,7 @@ function initialSetup() {
     
     camera = translate(0.0, -0.5, 0.0);
     projection = perspective(90, 960./540, 0.01, groundSize);
+    inv_projection = inverse4(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
               groundSize / 2, 0.0, 0.0,
               - groundSize / 2, 0.0, - groundSize,
@@ -98,7 +100,7 @@ function animate(time) {
     time_old = time;
     //camera = mult(translate(0.0, 0.0, 0.01 * dt), camera);
     for (var i = 0; i < locations.length; i++) {
-        locations[i] = mult(translate(0.0, 0.0, 0.01 * dt), locations[i]);
+        locations[i] = mult(translate(0.0, 0.0, 0.005 * dt), locations[i]);
         if (key.left)
             locations[i] = mult(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
         else if (key.right)
@@ -137,11 +139,14 @@ function render() {
     gl.uniformMatrix4fv(_projection, false, flatten(projection));
     gl.uniform4fv(_color, flatten(vec4(0.3, 0.3, 0.3, 1.0)));
     
+    var offset = 0.01; //decided by bounding volumn
     for (var i = 0; i < locations.length; i++) {
-        pos = times(locations[i], vec4(0.0, 0.0, 0.0, 1.0));
-        pos = times(camera, pos);
-        var z = pos[2];
-        if (z > 0) {  //pop things behind the camera
+        var pos = find_clip_coord(locations[i], offset);
+        //console.log(pos);
+        var z = pos[2] / pos[3];
+        var x = pos[0] / pos[3];
+        var y = pos[1] / pos[3];
+        if (z > 1.0 || y > 1.0 || z > 1.0 ) {  //pop things behind the camera
             locations.splice(i, 1);
             i = i - 1;
         } else {
@@ -151,21 +156,35 @@ function render() {
     }
     
     var len = locations.length
+
     while (len < geoNumber) {
         var coin = Math.random();
-        if (coin > 0.5) {
-            var x = (Math.random() - 0.5) * groundSize;
-            var y = 0.0;
-            var z = - groundSize - Math.random() * 1;
-            locations.push(translate(x, y, z));
-            len = locations.length;
-        } else {
-            var x = groundSize / 2 + Math.random() * 1;
-            var y = 0.0;
-            var z = -Math.random() * groundSize;
-            locations.push(translate(x, y, z));
-            locations.push(translate(-x, y, z));
+        var x = (Math.random() - 0.5) * 2;
+        var z = (Math.random() - 0.5) * 2;
+        var w = (Math.random()) * groundSize;
+        var clipped;
+        var world_coord;
+        if (coin < 0.2) {
+            clipped = vec4(x * w, 0.0, groundSize, groundSize);
+            world_coord = times(inv_projection, clipped);
+            world_coord[1] = 0.0;
+            locations.push(translate(vec3(world_coord)));
         }
+        else if (coin < 0.6) {
+            clipped = vec4((1.0) * w, 0.0, z * w, w);
+            world_coord = times(inv_projection, clipped);
+            world_coord[1] = 0.0;
+            world_coord[0] = world_coord[0] + offset + Math.random();
+            locations.push(translate(vec3(world_coord)));
+        }
+        else {
+            clipped = vec4(-(1.0) * w, 0.0, z * w, w);
+            world_coord = times(inv_projection, clipped);
+            world_coord[1] = 0.0;
+            world_coord[0] = world_coord[0] - offset - Math.random();
+            locations.push(translate(vec3(world_coord)));
+        }
+        len = locations.length;
     }
 }
 
@@ -213,4 +232,33 @@ function times(matrix, vector) {
         result.push(dot(matrix[i], vector));
     }
     return result;
+}
+
+function inverse4(m) {
+    var a = m[0][0];
+    var b = m[1][1];
+    var c = m[2][2];
+    var d = m[2][3];
+    var inv = [];
+    inv.push(vec4(1 / a, 0.0, 0.0, 0.0));
+    inv.push(vec4(0.0, 1 / b, 0.0, 0.0));
+    inv.push(vec4(0.0, 0.0, 0.0, -1.0));
+    inv.push(vec4(0.0, 0.0, 1 / d, c / d));
+    return inv;
+}
+
+function find_clip_coord(location, offset) {
+    var pos1 = times(location, vec4(offset, 0.0, - offset, 1.0));
+    //pos = times(camera, pos);
+    pos1 = times(projection, pos1);
+    var pos2 = times(location, vec4(- offset, 0.0, - offset, 1.0));
+    pos2 = times(projection, pos2);
+
+    var pos = [];
+    pos.push(Math.min(Math.abs(pos1[0]), Math.abs(pos2[0])));
+    pos.push(Math.min(Math.abs(pos1[1]), Math.abs(pos2[1])));
+    pos.push(Math.min(Math.abs(pos1[2]), Math.abs(pos2[2])));
+    pos.push(Math.max(Math.abs(pos1[3]), Math.abs(pos2[3])));    
+
+    return pos;
 }
