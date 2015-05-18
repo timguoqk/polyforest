@@ -59,8 +59,8 @@ window.onload = function() {
 };
 
 function initialSetup() {
-    groundSize = 200.0;
-    geoNumber = 300;  // Total number of geometries
+    groundSize = 100.0;
+    geoNumber = 100;  // Total number of geometries
     
     camera = translate(0.0, -0.5, 0.0);
     projection = perspective(90, 960./540, 0.01, groundSize);
@@ -164,6 +164,20 @@ function render() {
         var w = (Math.random()) * groundSize;
         var clipped;
         var world_coord;
+        if (key.right == true) {
+            clipped = vec4((1.0) * w, 0.0, z * w, w);
+            world_coord = times(inv_projection, clipped);
+            world_coord[1] = 0.0;
+            world_coord[0] = world_coord[0] + offset + Math.random();
+            locations.push(translate(vec3(world_coord)));
+        }
+        if (key.left == true) {
+            clipped = vec4(-(1.0) * w, 0.0, z * w, w);
+            world_coord = times(inv_projection, clipped);
+            world_coord[1] = 0.0;
+            world_coord[0] = world_coord[0] - offset - Math.random();
+            locations.push(translate(vec3(world_coord)));
+        }
         if (coin < 0.2) {
             clipped = vec4(x * w, 0.0, groundSize, groundSize);
             world_coord = times(inv_projection, clipped);
@@ -178,7 +192,7 @@ function render() {
             locations.push(translate(vec3(world_coord)));
         }
         else {
-            clipped = vec4(-(1.0) * w, 0.0, z * w, w);
+            clipped = vec4((- 1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] - offset - Math.random();
