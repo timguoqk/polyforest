@@ -3,15 +3,28 @@ var gl;
 var points = [];
 var true_location = [];
 
-var NumPoints = 350;
+var NumPoints = 250;
 var _projection;
 var _modelView;
 var modelView = translate(0.0, 0.0, 0.0);
-var projection = perspective(90, 960.0/540.0, 0.01, 100);
+var far = 100;
+var near = 0.1;
+var projection = perspective(90, 960.0/540.0, near, far);
 var inv_projection = inverse4(projection);
 var velocity = [];
-var speed = 1.0;
-var box_size = 20.0;
+var speed = 3.0;
+var box_size = 100.0;
+var numCopys = 1;
+var offVec = [];
+var bufferId;
+var vPosition;
+var triangleBuffer;
+var triangle_vertex = [vec3(0.0, 0.0,0.0), vec3(0.01, 0.0, 0.0), vec3(0.0, 0.01, 0.0)];
+
+
+
+
+
 window.onload = function init()
 {
     var canvas = document.getElementById( "gl-canvas" );
@@ -23,7 +36,7 @@ window.onload = function init()
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
     gl.enable(gl.DEPTH_TEST);
-    gl.clearDepth(1.0);
+    //gl.clearDepth(1.0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -34,36 +47,55 @@ window.onload = function init()
     gl.useProgram( program );
     
     // Load the data into the GPU
-    
-    var bufferId = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-    
-
-    // Associate out shader variables with our data buffer
-    
-    var vPosition = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
+    vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.enableVertexAttribArray( vPosition );
+
+    bufferId = gl.createBuffer();
+
+    triangleBuffer = gl.createBuffer();
+
     _projection = gl.getUniformLocation(program, "projection");
     gl.uniformMatrix4fv(_projection, false, flatten(projection));
     _modelView = gl.getUniformLocation(program, "modelView");
-    gl.uniformMatrix4fv(_modelView, false, flatten(modelView));
     setUpPoints();
     animate(0);
+    for (var i = 0; i < numCopys; i ++) {
+        offVec.push(scale2(0.2, vec3(Math.random() - 0.5, Math.random() - 0.5 , Math.random() - 0.5)));
+    }
 };
 
 function animate(time){
-    updatVelocity(1.0, 100.0);
-    updataPointsLocation();
+    updatVelocity(1.0, 50.0);
+    updatePointsLocation();
     generateTrueLocation();
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(true_location), gl.STATIC_DRAW );
     render();
     window.requestAnimationFrame(animate);
 } 
 
 function render() {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.drawArrays( gl.POINTS, 0, points.length );
+
+    // Draw points
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(true_location), gl.STATIC_DRAW);
+    gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
+    for (var i = 0; i < numCopys; i++){
+        //modelView = translate(offVec[i]);
+        modelView = translate(0.0, 0.0, 0.0);
+        gl.uniformMatrix4fv(_modelView, false, flatten(modelView));
+        gl.drawArrays( gl.POINTS, 0, points.length);
+    }
+
+    // Draw Triangles
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(triangle_vertex), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+    for (var i = 0; i < NumPoints; i++)
+    {
+        modelView = translate(true_location[i]);
+        gl.uniformMatrix4fv(_modelView, false, flatten(modelView));
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
 }
 
 
@@ -82,7 +114,7 @@ function updatVelocity(sepDist, detDist) {
             if (distance > detDist || distance == 0.0) {
                 continue;
             }
-            else if (distance < sepDist) {
+            if (distance < sepDist) {
                 sepCounter++;
                 sepVel = add(sepVel, scale2(1.0/distance, negate(direction)) );
             }
@@ -90,30 +122,41 @@ function updatVelocity(sepDist, detDist) {
             cohVel = add(cohVel, direction);
             algVel = add(algVel, scale2(1.0/distance, velocity[j]));
         }
-        if (sepCounter > 0) {
+        if (sepCounter > 0 && length(sepVel > 0)) {
             sepVel = normalize(scale2(1.0/sepCounter, sepVel));
         }
-        if (detDist > 0) {
+        if (detCounter > 0 && length(cohVel > 0)) {
             cohVel = normalize(scale2(1.0/detCounter, cohVel));
+        }
+        if (detCounter > 0 && length(algVel > 0)) {
             algVel = normalize(scale2(1.0/detCounter, algVel));
         }
-        var new_vel = normalize(add(add(algVel, cohVel), scale2(1.5, sepVel)));
+        var new_vel = add(add(scale2(3, algVel), cohVel), scale2(5.5, sepVel));
+        if (length(new_vel) > 0) {
+            new_vel = normalize(new_vel);
+        }
+        else {
+            new_vel = velocity[i];
+        }
         var diff = subtract(new_vel, velocity[i]);
         var diff_mag = length(diff);
-        diff = scale2(0.1/diff_mag, diff);
-        velocity[i] = add(velocity[i] , diff);
+        if (diff_mag > 0) {
+            diff = scale2(0.3/diff_mag, diff);
+        }
+        velocity[i] = normalize(add(velocity[i] , diff));
     }
+
 }
 
 function generateTrueLocation() {
     for (var i = 0; i < NumPoints; i++) {
-        var clipped = (scale2(1.0/box_size,points[i]));
-
-        true_location[i] = vec3(times(inv_projection, vec4(clipped, 1.0)));
+        var clipped = scale2(1.0 /box_size, points[i]);
+        var w = (2 * far * near) / (far + near - clipped[2] * (far - near));
+        true_location[i] = vec3(times(inv_projection, vec4(scale2(w, clipped), w)));
     }
 }
 
-function updataPointsLocation() {
+function updatePointsLocation() {
     for (var i = 0; i < NumPoints; i++) {
         var temp = add(points[i], scale2(speed, velocity[i]));
         points[i] = moduleboxsize(temp);
@@ -128,7 +171,7 @@ function setUpPoints() {
         var y = Math.sin(theta) * Math.cos(phi);
         var z = Math.sin(phi);
         points.push(vec3(x,y,z));
-        velocity.push(vec3(x, y, z));
+        velocity.push(add(vec3(x,y,z), vec3(0.0, 0.0, 0.0)));
         true_location.push(vec3(x,y,z));
     }
 }
@@ -158,11 +201,11 @@ function times(matrix, vector) {
 
 function moduleboxsize(vector) {
     for (var i = 0; i < vector.length; i++) {
-        if (vector[i] > box_size) {
-            vector[i] = vector[i] - 2.0 * box_size;
+        if (vector[i] > 0.9 * box_size) {
+            vector[i] = vector[i] - 2.0 * 0.9 * box_size;
         }
-        else if (vector[i] < -box_size) {
-            vector[i] = vector[i] + 2.0 * box_size;
+        else if (vector[i] < - 0.9 * box_size) {
+            vector[i] = vector[i] + 2.0 *  0.9 * box_size;
         }    
     }
     return vector;
@@ -178,5 +221,6 @@ function inverse4(m) {
     inv.push(vec4(0.0, 1 / b, 0.0, 0.0));
     inv.push(vec4(0.0, 0.0, 0.0, -1.0));
     inv.push(vec4(0.0, 0.0, 1 / d, c / d));
+    inv.matrix = true;
     return inv;
 }
