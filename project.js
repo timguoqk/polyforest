@@ -11,18 +11,19 @@ var key = {left: false, right: false, up: false, down: false};
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
-    ambient: vec4(1.0, 1.0, 1.0, 0.5),
-    diffuse: vec4(1.0, 0.0, 0.0, 1.0),
+    ambient: vec4(1.0, 1.0, 1.0, 0.1),
+    // diffuse: vec4(1.0, 1.0, 1.0, 0.2),
+    diffuse: vec4(1.0, 1.0, 1.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
     age: 0  // Lights will decay (except the global ambient light)
 }];
 
 var materials = {
     ground: {
-        ambient: vec4(0.2, 0.2, 0.2, 0.5),
-        diffuse: vec4(1.0, 0.8, 0.0, 1.0),
-        specular: vec4(1.0, 1.0, 1.0, 1.0),
-        shininess: 20.0
+        ambient: vec4(0.5, 0.5, 0.5, 0.2),
+        diffuse: vec4(0.5, 0.5, 0.5, 0.2),
+        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        shininess: 0.0
     }
 };
 
@@ -139,7 +140,6 @@ function animate(time) {
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.uniformMatrix4fv(_camera, false, flatten(camera));
     gl.uniformMatrix4fv(_projection, false, flatten(projection));
 
     // Draw ground
@@ -181,14 +181,7 @@ function render() {
             locations.splice(i, 1);
             i = i - 1;
         } else {
-            var modelViewMatrix = mult(camera, locations[i]);
-            normalMatrix = [
-                vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
-                vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
-                vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
-            ];
-            gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
-            gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
+            gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
             gl.drawArrays(gl.TRIANGLES, 0, 9);
         }
     }
