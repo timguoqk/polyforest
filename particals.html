@@ -8,20 +8,25 @@
 attribute vec3 vPosition;
 uniform mat4 projection;
 uniform mat4 modelView;
+varying vec4 fcolor;
 void
 main()
 {
 	gl_PointSize = 2.0;
     gl_Position = projection * modelView * vec4(vPosition, 1.0);
+    vec4 coord = modelView * vec4(vPosition,1.0);
+    float d =   200.0 * dot(coord, coord) - 200.0 * pow(dot(coord, coord), 0.5) - 1.0;
+    fcolor = vec4(vec3(1.0, 1.0, 1.0) / d, 1.0);
 }
 </script>
 
 <script id="fragment-shader" type="x-shader/x-fragment">
 precision mediump float;
+varying vec4 fcolor;
 void
 main()
 {
-    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );
+    gl_FragColor = fcolor;//vec4( 1.0, 1.0, 1.0, 1.0 );
 }
 </script>
 

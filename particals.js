@@ -76,15 +76,15 @@ function render() {
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Draw points
-    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(true_location), gl.STATIC_DRAW);
-    gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
-    for (var i = 0; i < numCopys; i++){
-        //modelView = translate(offVec[i]);
-        modelView = translate(0.0, 0.0, 0.0);
-        gl.uniformMatrix4fv(_modelView, false, flatten(modelView));
-        gl.drawArrays( gl.POINTS, 0, points.length);
-    }
+    //gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+    //gl.bufferData(gl.ARRAY_BUFFER, flatten(true_location), gl.STATIC_DRAW);
+    //gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
+    //for (var i = 0; i < numCopys; i++){
+    //    //modelView = translate(offVec[i]);
+    //    modelView = translate(0.0, 0.0, 0.0);
+    //    gl.uniformMatrix4fv(_modelView, false, flatten(modelView));
+    //    gl.drawArrays( gl.POINTS, 0, points.length);
+    //}
 
     // Draw Triangles
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
@@ -141,7 +141,7 @@ function updatVelocity(sepDist, detDist) {
         var diff = subtract(new_vel, velocity[i]);
         var diff_mag = length(diff);
         if (diff_mag > 0) {
-            diff = scale2(0.3/diff_mag, diff);
+            diff = scale2(0.25/diff_mag, diff);
         }
         velocity[i] = normalize(add(velocity[i] , diff));
     }
