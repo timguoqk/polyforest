@@ -63,7 +63,7 @@ function initialSetup() {
     geoNumber = 100;  // Total number of geometries
     
     camera = translate(0.0, -0.5, 0.0);
-    projection = perspective(90, 960./540, 0.01, groundSize);
+    projection = perspective(40, 960./540, 0.01, groundSize);
     inv_projection = inverse4(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
               groundSize / 2, 0.0, 0.0,
@@ -168,14 +168,14 @@ function render() {
             clipped = vec4((1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] + offset + Math.random();
+            world_coord[0] = world_coord[0] + offset + 3.0 *Math.random();
             locations.push(translate(vec3(world_coord)));
         }
         if (key.left == true) {
             clipped = vec4(-(1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] - offset - Math.random();
+            world_coord[0] = world_coord[0] - offset - 3.0 * Math.random();
             locations.push(translate(vec3(world_coord)));
         }
         if (coin < 0.2) {
@@ -188,14 +188,14 @@ function render() {
             clipped = vec4((1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] + offset + Math.random();
+            world_coord[0] = world_coord[0] + offset + 3.0 * Math.random();
             locations.push(translate(vec3(world_coord)));
         }
         else {
             clipped = vec4((- 1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] - offset - Math.random();
+            world_coord[0] = world_coord[0] - offset - 3.0 * Math.random();
             locations.push(translate(vec3(world_coord)));
         }
         len = locations.length;
