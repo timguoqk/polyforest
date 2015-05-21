@@ -11,15 +11,15 @@ var key = {left: false, right: false, up: false, down: false};
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
-    ambient: vec4(0.2, 0.2, 0.2, 1.0),
-    diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-    specular: vec4(1.0, 1.0, 1.0, 1.0),
-    age: 0  // Lights will decay
+    ambient: vec4(1.0, 1.0, 1.0, 0.5),
+    diffuse: vec4(1.0, 0.0, 0.0, 1.0),
+    specular: vec4(0.0, 0.0, 0.0, 0.0),
+    age: 0  // Lights will decay (except the global ambient light)
 }];
 
 var materials = {
     ground: {
-        ambient: vec4(1.0, 0.0, 1.0, 1.0),
+        ambient: vec4(0.2, 0.2, 0.2, 0.5),
         diffuse: vec4(1.0, 0.8, 0.0, 1.0),
         specular: vec4(1.0, 1.0, 1.0, 1.0),
         shininess: 20.0
@@ -27,6 +27,7 @@ var materials = {
 };
 
 var MAX_LIGHTS = 10;  // This should match the macro in GLSL!
+var LIGHT_LIFE_EXPECTANCY = 500;
 
 document.addEventListener('keydown', keyDownHandler);
 document.addEventListener('keyup', keyUpHandler);
@@ -236,9 +237,13 @@ function render() {
         }
     }
 
-    // Lights decay
-    for (var i = 0; i < lights.length; i ++)
-        lights[i].age --;
+    // Lights decay, note that the first light is ambient and won't decay
+    for (var i = 1; i < lights.length; i ++) {
+        lights[i].age ++;
+        // TODO: decay in strength
+        if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
+            lights.splice(i, 1);
+    }
 }
 
 /********  Interface  ********/
@@ -266,17 +271,20 @@ function keyUpHandler(event) {
 }
 
 function clickHandler(event) {
+    if (lights.length == MAX_LIGHTS)
+        return;
+
     var x = event.clientX;
     var y = event.clientY;
     // TODO: lights should vary
-    // var light = {
-    //     position: vec4(1.0, 1.0, 1.0, 0.0),
-    //     ambient: vec4(0.2, 0.2, 0.2, 1.0),
-    //     diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-    //     specular: vec4(1.0, 1.0, 1.0, 1.0),
-    //     age: 0
-    // };
-    // lights.push(light);
+    var light = {
+        position: vec4(1.0, 1.0, 1.0, 0.0),
+        ambient: vec4(0.2, 0.2, 0.2, 1.0),
+        diffuse: vec4(1.0, 1.0, 1.0, 1.0),
+        specular: vec4(1.0, 1.0, 1.0, 1.0),
+        age: 0
+    };
+    lights.push(light);
 }
 
 var betaHistory = [];
@@ -290,7 +298,7 @@ function gyroscopeHandler(event) {
     camera = translate(0.0, -0.5, 0.0);
     camera = mult(camera, rotate(beta, [0, 1, 0]));
 }
-/********  Trivial  ********/
+
 function setUniformLights(material) {
     var am = [], di = [], sp = [], po = [];
 
