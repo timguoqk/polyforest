@@ -7,7 +7,7 @@
 		#define MAX_LIGHTS 10
 		attribute vec3 vPosition;
 		attribute vec3 normal;
-		varying vec3 N[MAX_LIGHTS], L[MAX_LIGHTS], E[MAX_LIGHTS];
+		varying vec3 N, L[MAX_LIGHTS], E;
 		uniform vec4 lightPosition[MAX_LIGHTS];
 		uniform mat4 projection;
 		uniform mat4 modelView;
@@ -16,16 +16,13 @@
 			gl_Position = projection * modelView * vec4(vPosition, 1.);
 
 			vec3 pos = (modelView * vec4(vPosition, 1.)).xyz;
-			vec3 E0 = -normalize(pos);
-			vec3 N0 = normalize(normalMatrix * normal);
+			E = -normalize(pos);
+			N = normalize(normalMatrix * normal);
 			for (int i = 0; i < MAX_LIGHTS; i ++) {
 				if (lightPosition[i].z == 0.0)
 					L[i] = normalize(lightPosition[i].xyz);
 				else
 					L[i] = normalize(lightPosition[i]).xyz - pos;
-
-				E[i] = E0;
-				N[i] = N0;
 			}
 		}
 	</script>
@@ -37,20 +34,20 @@
 		uniform vec4 ambientProduct[MAX_LIGHTS];
 		uniform vec4 diffuseProduct[MAX_LIGHTS];
 		uniform vec4 specularProduct[MAX_LIGHTS];
-		varying vec3 N[MAX_LIGHTS], L[MAX_LIGHTS], E[MAX_LIGHTS];
+		varying vec3 N, L[MAX_LIGHTS], E;
 		void main()
 		{
 			vec4 fColor = vec4(0.0, 0.0, 0.0, 0.0);
 			for (int i = 0; i < MAX_LIGHTS; i ++) {
-				vec3 H = normalize(L[i] + E[i]);
+				vec3 H = normalize(L[i] + E);
 
-				float Kd = max(dot(L[i], N[i]), 0.0);
+				float Kd = max(dot(L[i], N), 0.0);
 				vec4 diffuse = Kd * diffuseProduct[i];
 
-				float Ks = pow(max(dot(N[i], H), 0.0), shininess);
+				float Ks = pow(max(dot(N, H), 0.0), shininess);
 				vec4 specular = Ks * specularProduct[i];
 				
-				if (dot(L[i], N[i]) < 0.0)
+				if (dot(L[i], N) < 0.0)
 					specular = vec4(0.0, 0.0, 0.0, 1.0);
 
 				// TODO: how to blend?
