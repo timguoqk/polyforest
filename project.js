@@ -6,8 +6,33 @@ var projection, camera;
 var inv_projection;
 var locations = [];  //locations of geometries
 var time_old = 0;
-var _camera, _vPosition, _projection, _modelView, _color, _normal; //handles
+var _camera, _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
+
+var lights = [{
+    position: vec4(1.0, 1.0, 1.0, 0.0),
+    ambient: vec4(1.0, 1.0, 1.0, 0.5),
+    diffuse: vec4(1.0, 0.0, 0.0, 1.0),
+    specular: vec4(0.0, 0.0, 0.0, 0.0),
+    age: 0  // Lights will decay (except the global ambient light)
+}];
+
+var materials = {
+    ground: {
+        ambient: vec4(0.2, 0.2, 0.2, 0.5),
+        diffuse: vec4(1.0, 0.8, 0.0, 1.0),
+        specular: vec4(1.0, 1.0, 1.0, 1.0),
+        shininess: 20.0
+    }
+};
+
+var MAX_LIGHTS = 10;  // This should match the macro in GLSL!
+var LIGHT_LIFE_EXPECTANCY = 500;
+
+document.addEventListener('keydown', keyDownHandler);
+document.addEventListener('keyup', keyUpHandler);
+document.addEventListener('click', clickHandler);
+window.ondeviceorientation = gyroscopeHandler;
 
 window.onload = function() {
     var canvas = document.getElementById("gl-canvas");
@@ -32,8 +57,13 @@ window.onload = function() {
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
     _modelView = gl.getUniformLocation(program, "modelView");
-    _color = gl.getUniformLocation(program, "color");
     _normal = gl.getAttribLocation(program, "normal");
+    _normalMatrix = gl.getUniformLocation(program, "normalMatrix");
+    _ambientProduct = gl.getUniformLocation(program, "ambientProduct")
+    _diffuseProduct = gl.getUniformLocation(program, "diffuseProduct")
+    _specularProduct = gl.getUniformLocation(program, "specularProduct")
+    _lightPosition = gl.getUniformLocation(program, "lightPosition")
+    _shininess = gl.getUniformLocation(program, "shininess")
     
     initialSetup();
     
@@ -52,9 +82,6 @@ window.onload = function() {
     gl.enableVertexAttribArray(_vPosition);
     gl.enableVertexAttribArray(_normal);
     
-    document.addEventListener('keydown', keyHandler);
-    document.addEventListener('keyup', keyUp);
-    window.ondeviceorientation = gyroscopeHandler;
     animate(0);
 };
 
@@ -112,34 +139,38 @@ function animate(time) {
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
+    gl.uniformMatrix4fv(_camera, false, flatten(camera));
+    gl.uniformMatrix4fv(_projection, false, flatten(projection));
+
     // Draw ground
     gl.bindBuffer(gl.ARRAY_BUFFER, groundBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(ground), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.uniformMatrix4fv(_camera, false, flatten(camera));
-    gl.uniformMatrix4fv(_projection, false, flatten(projection));
-    gl.uniformMatrix4fv(_modelView, false, flatten(translate(0.0, 0.0, 0.0)));
-    gl.uniform4fv(_color, flatten(vec4(0.5, 0.5, 0.5, 1.0)));
+
+    var modelViewMatrix = camera;
+    normalMatrix = [
+        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
+        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
+        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
+    ];
+    gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
+    gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
+
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     
-    //for (var i = 0; i < 20; i++) {
-    //    gl.uniformMatrix4fv(_modelView, false, flatten(locations[i]));
-    //    gl.drawArrays(gl.TRIANGLES, 0, 9);
-    //}
+    // Draw geometries
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false, 0, 0);
-    
-    // Draw geometries
+
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.uniformMatrix4fv(_camera, false, flatten(camera));
-    gl.uniformMatrix4fv(_projection, false, flatten(projection));
-    gl.uniform4fv(_color, flatten(vec4(0.3, 0.3, 0.3, 1.0)));
     
-    var offset = 0.01; //decided by bounding volumn
+    // Set up light
+    setUniformLights(materials.ground);
+
+    var offset = 0.01; //decided by bounding volume
     for (var i = 0; i < locations.length; i++) {
         var pos = find_clip_coord(locations[i], offset);
         //console.log(pos);
@@ -150,14 +181,20 @@ function render() {
             locations.splice(i, 1);
             i = i - 1;
         } else {
-            gl.uniformMatrix4fv(_modelView, false, flatten(locations[i]));
+            var modelViewMatrix = mult(camera, locations[i]);
+            normalMatrix = [
+                vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
+                vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
+                vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
+            ];
+            gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
+            gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
             gl.drawArrays(gl.TRIANGLES, 0, 9);
         }
     }
-    
-    var len = locations.length
 
-    while (len < geoNumber) {
+    // FIXME: @lihao http://en.wikipedia.org/wiki/Don%27t_repeat_yourself
+    while (locations.length < geoNumber) {
         var coin = Math.random();
         var x = (Math.random() - 0.5) * 2;
         var z = (Math.random() - 0.5) * 2;
@@ -198,13 +235,20 @@ function render() {
             world_coord[0] = world_coord[0] - offset - 3.0 * Math.random();
             locations.push(translate(vec3(world_coord)));
         }
-        len = locations.length;
+    }
+
+    // Lights decay, note that the first light is ambient and won't decay
+    for (var i = 1; i < lights.length; i ++) {
+        lights[i].age ++;
+        // TODO: decay in strength
+        if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
+            lights.splice(i, 1);
     }
 }
 
-/******** Interface ********/
+/********  Interface  ********/
 
-function keyHandler(event) {
+function keyDownHandler(event) {
     switch (event.keyCode){
         case 37:  // left arrow
             key.left = true;
@@ -215,7 +259,7 @@ function keyHandler(event) {
     }
 }
 
-function keyUp(event) {
+function keyUpHandler(event) {
     switch (event.keyCode){
         case 37:  // left arrow
             key.left = false;
@@ -224,6 +268,23 @@ function keyUp(event) {
             key.right = false;
             break;
     }
+}
+
+function clickHandler(event) {
+    if (lights.length == MAX_LIGHTS)
+        return;
+
+    var x = event.clientX;
+    var y = event.clientY;
+    // TODO: lights should vary
+    var light = {
+        position: vec4(1.0, 1.0, 1.0, 0.0),
+        ambient: vec4(0.2, 0.2, 0.2, 1.0),
+        diffuse: vec4(1.0, 1.0, 1.0, 1.0),
+        specular: vec4(1.0, 1.0, 1.0, 1.0),
+        age: 0
+    };
+    lights.push(light);
 }
 
 var betaHistory = [];
@@ -238,10 +299,34 @@ function gyroscopeHandler(event) {
     camera = mult(camera, rotate(beta, [0, 1, 0]));
 }
 
-/******** Utility  ********/
+function setUniformLights(material) {
+    var am = [], di = [], sp = [], po = [];
+
+    for (var i = 0; i < lights.length; i ++) {
+        am.push(mult(material.ambient, lights[i].ambient));
+        di.push(mult(material.diffuse, lights[i].diffuse));
+        sp.push(mult(material.specular, lights[i].specular));
+        po.push(lights[i].position);
+    }
+    for (var i = lights.length; i < MAX_LIGHTS; i ++) {
+        // Fill it with zeroes
+        am.push(0.0);
+        di.push(0.0);
+        sp.push(0.0);
+        po.push(0.0);
+    }
+
+    gl.uniform4fv(_ambientProduct, flatten(am));
+    gl.uniform4fv(_diffuseProduct, flatten(di));
+    gl.uniform4fv(_specularProduct, flatten(sp));
+    gl.uniform4fv(_lightPosition, flatten(po));
+    gl.uniform1f(_shininess, material.shininess);
+}
+
+/********  Utility  ********/
 
 function times(matrix, vector) {
-    result = [];
+    var result = [];
     for (var i = 0; i < 4; i++) {
         result.push(dot(matrix[i], vector));
     }
