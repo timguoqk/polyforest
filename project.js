@@ -9,19 +9,29 @@ var time_old = 0;
 var _camera, _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
 
-var light = {
+var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
     ambient: vec4(0.2, 0.2, 0.2, 1.0),
     diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-    specular: vec4(1.0, 1.0, 1.0, 1.0)
-};
-var material = {
-    ambient: vec4(1.0, 0.0, 1.0, 1.0),
-    diffuse: vec4(1.0, 0.8, 0.0, 1.0),
     specular: vec4(1.0, 1.0, 1.0, 1.0),
-    shininess: 20.0
+    age: 0  // Lights will decay
+}];
+
+var materials = {
+    ground: {
+        ambient: vec4(1.0, 0.0, 1.0, 1.0),
+        diffuse: vec4(1.0, 0.8, 0.0, 1.0),
+        specular: vec4(1.0, 1.0, 1.0, 1.0),
+        shininess: 20.0
+    }
 };
 
+var MAX_LIGHTS = 10;  // This should match the macro in GLSL!
+
+document.addEventListener('keydown', keyDownHandler);
+document.addEventListener('keyup', keyUpHandler);
+document.addEventListener('click', clickHandler);
+window.ondeviceorientation = gyroscopeHandler;
 
 window.onload = function() {
     var canvas = document.getElementById("gl-canvas");
@@ -71,9 +81,6 @@ window.onload = function() {
     gl.enableVertexAttribArray(_vPosition);
     gl.enableVertexAttribArray(_normal);
     
-    document.addEventListener('keydown', keyHandler);
-    document.addEventListener('keyup', keyUp);
-    window.ondeviceorientation = gyroscopeHandler;
     animate(0);
 };
 
@@ -160,11 +167,7 @@ function render() {
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
     
     // Set up light
-    gl.uniform4fv(_ambientProduct, flatten(mult(light.ambient, material.ambient)));
-    gl.uniform4fv(_diffuseProduct, flatten(mult(light.diffuse, material.diffuse)));
-    gl.uniform4fv(_specularProduct, flatten(mult(light.specular, material.specular)));
-    gl.uniform4fv(_lightPosition, flatten(light.position));
-    gl.uniform1f(_shininess, material.shininess);
+    setUniformLights(materials.ground);
 
     var offset = 0.01; //decided by bounding volume
     for (var i = 0; i < locations.length; i++) {
@@ -232,11 +235,15 @@ function render() {
             locations.push(translate(vec3(world_coord)));
         }
     }
+
+    // Lights decay
+    for (var i = 0; i < lights.length; i ++)
+        lights[i].age --;
 }
 
-/******** Interface ********/
+/********  Interface  ********/
 
-function keyHandler(event) {
+function keyDownHandler(event) {
     switch (event.keyCode){
         case 37:  // left arrow
             key.left = true;
@@ -247,7 +254,7 @@ function keyHandler(event) {
     }
 }
 
-function keyUp(event) {
+function keyUpHandler(event) {
     switch (event.keyCode){
         case 37:  // left arrow
             key.left = false;
@@ -256,6 +263,20 @@ function keyUp(event) {
             key.right = false;
             break;
     }
+}
+
+function clickHandler(event) {
+    var x = event.clientX;
+    var y = event.clientY;
+    // TODO: lights should vary
+    // var light = {
+    //     position: vec4(1.0, 1.0, 1.0, 0.0),
+    //     ambient: vec4(0.2, 0.2, 0.2, 1.0),
+    //     diffuse: vec4(1.0, 1.0, 1.0, 1.0),
+    //     specular: vec4(1.0, 1.0, 1.0, 1.0),
+    //     age: 0
+    // };
+    // lights.push(light);
 }
 
 var betaHistory = [];
@@ -269,11 +290,35 @@ function gyroscopeHandler(event) {
     camera = translate(0.0, -0.5, 0.0);
     camera = mult(camera, rotate(beta, [0, 1, 0]));
 }
+/********  Trivial  ********/
+function setUniformLights(material) {
+    var am = [], di = [], sp = [], po = [];
 
-/******** Utility  ********/
+    for (var i = 0; i < lights.length; i ++) {
+        am.push(mult(material.ambient, lights[i].ambient));
+        di.push(mult(material.diffuse, lights[i].diffuse));
+        sp.push(mult(material.specular, lights[i].specular));
+        po.push(lights[i].position);
+    }
+    for (var i = lights.length; i < MAX_LIGHTS; i ++) {
+        // Fill it with zeroes
+        am.push(0.0);
+        di.push(0.0);
+        sp.push(0.0);
+        po.push(0.0);
+    }
+
+    gl.uniform4fv(_ambientProduct, flatten(am));
+    gl.uniform4fv(_diffuseProduct, flatten(di));
+    gl.uniform4fv(_specularProduct, flatten(sp));
+    gl.uniform4fv(_lightPosition, flatten(po));
+    gl.uniform1f(_shininess, material.shininess);
+}
+
+/********  Utility  ********/
 
 function times(matrix, vector) {
-    result = [];
+    var result = [];
     for (var i = 0; i < 4; i++) {
         result.push(dot(matrix[i], vector));
     }
