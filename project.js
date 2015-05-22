@@ -54,7 +54,6 @@ window.onload = function() {
     gl.useProgram(program);
     
     // Get handles
-    _camera = gl.getUniformLocation(program, "camera");
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
     _modelView = gl.getUniformLocation(program, "modelView");
@@ -128,7 +127,7 @@ function animate(time) {
     time_old = time;
     //camera = mult(translate(0.0, 0.0, 0.01 * dt), camera);
     for (var i = 0; i < locations.length; i++) {
-        locations[i] = mult(translate(0.0, 0.0, 0.005 * dt), locations[i]);
+        locations[i] = mult(translate(0.0, 0.0, 0.001 * dt), locations[i]);
         if (key.left)
             locations[i] = mult(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
         else if (key.right)
