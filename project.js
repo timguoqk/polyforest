@@ -25,18 +25,19 @@ var vertices = [
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
-    ambient: vec4(1.0, 1.0, 1.0, 0.5),
-    diffuse: vec4(1.0, 0.0, 0.0, 1.0),
+    ambient: vec4(1.0, 1.0, 1.0, 0.1),
+    // diffuse: vec4(1.0, 1.0, 1.0, 0.2),
+    diffuse: vec4(1.0, 1.0, 1.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
     age: 0  // Lights will decay (except the global ambient light)
 }];
 
 var materials = {
     ground: {
-        ambient: vec4(0.2, 0.2, 0.2, 0.5),
-        diffuse: vec4(1.0, 0.8, 0.0, 1.0),
-        specular: vec4(1.0, 1.0, 1.0, 1.0),
-        shininess: 20.0
+        ambient: vec4(0.5, 0.5, 0.5, 0.2),
+        diffuse: vec4(0.5, 0.5, 0.5, 0.2),
+        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        shininess: 0.0
     }
 };
 
@@ -69,7 +70,6 @@ window.onload = function() {
     drawTree(vertices[0], vertices[1], vertices[2], vertices[3]);
     drawTree(vertices[4], vertices[5], vertices[6], vertices[7]);
     // Get handles
-    _camera = gl.getUniformLocation(program, "camera");
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
     _modelView = gl.getUniformLocation(program, "modelView");
@@ -123,7 +123,7 @@ function animate(time) {
     time_old = time;
     //camera = mult(translate(0.0, 0.0, 0.01 * dt), camera);
     for (var i = 0; i < locations.length; i++) {
-        locations[i] = mult(translate(0.0, 0.0, 0.005 * dt), locations[i]);
+        locations[i] = mult(translate(0.0, 0.0, 0.001 * dt), locations[i]);
         if (key.left)
             locations[i] = mult(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
         else if (key.right)
@@ -135,7 +135,6 @@ function animate(time) {
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.uniformMatrix4fv(_camera, false, flatten(camera));
     gl.uniformMatrix4fv(_projection, false, flatten(projection));
 
     // Draw ground
@@ -177,14 +176,7 @@ function render() {
             locations.splice(i, 1);
             i = i - 1;
         } else {
-            var modelViewMatrix = mult(camera, locations[i]);
-            normalMatrix = [
-                vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
-                vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
-                vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
-            ];
-            gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
-            gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
+            gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
             gl.drawArrays(gl.TRIANGLES, 0, 9);
             gl.drawArrays(gl.TRIANGLES, 9, geo.length  - 9);
         }
