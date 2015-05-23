@@ -37,7 +37,7 @@ var materials = {
         ambient: vec4(0.5, 0.5, 0.5, 0.2),
         diffuse: vec4(0.5, 0.5, 0.5, 0.2),
         specular: vec4(0.0, 0.0, 0.0, 0.0),
-        shininess: 0.0
+        shininess: 0.1
     }
 };
 
