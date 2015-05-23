@@ -1,13 +1,27 @@
+var canvas;
 var gl;
 var groundSize, ground, groundBuffer;
 var geoNumber, geo, geoBuffer;
 var normals, normalBuffer;
+var geo = [];
+var normals = [];
 var projection, camera;
 var inv_projection;
 var locations = [];  //locations of geometries
 var time_old = 0;
 var _camera, _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
+
+var vertices = [
+                vec3(-0.5, 0.0, 0.0),
+                vec3(0.0, 0.0, 0.5),
+                vec3(0.5, 0.0, 0.0), 
+                vec3(0.0, 20.0, 0.0),
+                vec3(-0.1, 17.0, 0.0),
+                vec3(0.0, 17.0, 0.1),
+                vec3(0.0, 16.0, 0.0),
+                vec3(-1.7, 21.0, 1.4)
+    ];
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
@@ -23,7 +37,7 @@ var materials = {
         ambient: vec4(0.5, 0.5, 0.5, 0.2),
         diffuse: vec4(0.5, 0.5, 0.5, 0.2),
         specular: vec4(0.0, 0.0, 0.0, 0.0),
-        shininess: 0.0
+        shininess: 0.1
     }
 };
 
@@ -53,6 +67,8 @@ window.onload = function() {
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
     
+    drawTree(vertices[0], vertices[1], vertices[2], vertices[3]);
+    drawTree(vertices[4], vertices[5], vertices[6], vertices[7]);
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
@@ -86,10 +102,14 @@ window.onload = function() {
 };
 
 function initialSetup() {
-    groundSize = 100.0;
+    groundSize = 200.0;
     geoNumber = 100;  // Total number of geometries
     
+<<<<<<< HEAD
     camera = translate(0.0, -0.5, 0.0);
+=======
+    camera = translate(0.0, -10, 0.0);
+>>>>>>> 837f1834b66e5c1d48851febb21a6d88520ea1e5
     projection = perspective(40, 960./540, 0.01, groundSize);
     inv_projection = inverse4(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
@@ -100,26 +120,6 @@ function initialSetup() {
               groundSize / 2, 0.0, 0.0,
               ];
     
-    geo = [-0.5, 0.0, 0.0,
-           0.0, 0.0, 0.5,
-           0.0, 20.0, 0.0,
-           0.5, 0.0, 0.0,
-           0.0, 0.0, 0.5,
-           0.0, 20.0, 0.0,
-           -0.5, 0.0, 0.0,
-           0.5, 0.0, 0.0,
-           0.0, 20.0, 0.0];
-    
-    normals = [-0.5, 0.0, 0.5, //not really normals
-              -0.5, 0.0, 0.5,
-              -0.5, 0.0, 0.5,
-              0.5 ,0.0, 0.5,
-              0.5, 0.0, 0.5,
-              0.5, 0.0, 0.5,
-              0.0, 0.0, -1.0,
-              0.0, 0.0, -1.0,
-              0.0, 0.0, -1.0,
-            ];
 }
 
 function animate(time) {
@@ -165,7 +165,7 @@ function render() {
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
-    
+    gl.enableVertexAttribArray( _vPosition );
     // Set up light
     setUniformLights(materials.ground);
 
@@ -182,6 +182,7 @@ function render() {
         } else {
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
             gl.drawArrays(gl.TRIANGLES, 0, 9);
+            gl.drawArrays(gl.TRIANGLES, 9, geo.length  - 9);
         }
     }
 
@@ -236,6 +237,30 @@ function render() {
         if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
             lights.splice(i, 1);
     }
+}
+
+
+function drawTree(a, b, c, d) {
+    geo.push(a);
+    normals.push(a[0],a[1], a[2], 0.0);
+    geo.push(b);
+    normals.push(b[0],b[1], a[2], 0.0);
+    geo.push(d);
+    normals.push(d[0],d[1], d[2], 0.0);
+    geo.push(b);
+    normals.push(b[0],b[1], b[2], 0.0);
+    geo.push(c);
+    normals.push(c[0],c[1], c[2], 0.0);
+    geo.push(d);
+    normals.push(d[0],d[1], d[2], 0.0);
+    geo.push(a);
+    normals.push(a[0],a[1], a[2], 0.0);
+    geo.push(c);
+    normals.push(c[0],c[1], c[2], 0.0);
+    geo.push(d);
+    normals.push(d[0],d[1], d[2], 0.0);
+
+    
 }
 
 /********  Interface  ********/
