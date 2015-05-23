@@ -103,13 +103,9 @@ window.onload = function() {
 
 function initialSetup() {
     groundSize = 200.0;
-    geoNumber = 100;  // Total number of geometries
+    geoNumber = 30;  // Total number of geometries
     
-<<<<<<< HEAD
-    camera = translate(0.0, -0.5, 0.0);
-=======
     camera = translate(0.0, -10, 0.0);
->>>>>>> 837f1834b66e5c1d48851febb21a6d88520ea1e5
     projection = perspective(40, 960./540, 0.01, groundSize);
     inv_projection = inverse4(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
@@ -176,7 +172,7 @@ function render() {
         var z = pos[2] / pos[3];
         var x = pos[0] / pos[3];
         var y = pos[1] / pos[3];
-        if (z > 1.0 || y > 1.0 || z > 1.0 ) {  //pop things behind the camera
+        if (x > 1.0 || y > 1.0 || z > 1.0 ) {  //pop things behind the camera
             locations.splice(i, 1);
             i = i - 1;
         } else {
@@ -188,7 +184,30 @@ function render() {
 
     // FIXME: @lihao http://en.wikipedia.org/wiki/Don%27t_repeat_yourself
     while (locations.length < geoNumber) {
-        var coin = Math.random();
+        if (key.right == true) {
+            var x = Math.random() * 0.5 * groundSize;
+        }
+        else if (key.left == true) {
+            var x = - Math.random() * 0.5 * groundSize;
+        }
+        else {
+            var x = (Math.random() - 0.5) * groundSize;
+        }
+        
+        var y = 0.0;
+        var z = - Math.random() * groundSize;
+        var potential = translate(vec3(x, y, z));
+        var clipped = find_clip_coord(potential, offset);
+        var x_clipped = clipped[0] / clipped[3];
+        var y_clipped = clipped[1] / clipped[3];
+        var z_clipped = clipped[2] / clipped[3];
+        //console.log(x_clipped);
+        if (x_clipped > 1.0 || y_clipped > 1.0 || z_clipped > 1.0) {
+            locations.push(potential);
+        }
+    }
+        //var coin = Math.random();
+        /*
         var x = (Math.random() - 0.5) * 2;
         var z = (Math.random() - 0.5) * 2;
         var w = (Math.random()) * groundSize;
@@ -198,14 +217,14 @@ function render() {
             clipped = vec4((1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] + offset + 3.0 *Math.random();
+            world_coord[0] = world_coord[0] + offset + Math.random();
             locations.push(translate(vec3(world_coord)));
         }
         if (key.left == true) {
             clipped = vec4(-(1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] - offset - 3.0 * Math.random();
+            world_coord[0] = world_coord[0] - offset - Math.random();
             locations.push(translate(vec3(world_coord)));
         }
         if (coin < 0.2) {
@@ -218,17 +237,20 @@ function render() {
             clipped = vec4((1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] + offset + 3.0 * Math.random();
+            world_coord[0] = world_coord[0] + offset + Math.random();
             locations.push(translate(vec3(world_coord)));
         }
         else {
             clipped = vec4((- 1.0) * w, 0.0, z * w, w);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] - offset - 3.0 * Math.random();
+            world_coord[0] = world_coord[0] - offset - Math.random();
             locations.push(translate(vec3(world_coord)));
         }
     }
+    */
+
+
 
     // Lights decay, note that the first light is ambient and won't decay
     for (var i = 1; i < lights.length; i ++) {
