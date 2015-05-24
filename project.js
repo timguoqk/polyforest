@@ -10,8 +10,6 @@ var _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequency;
 
-<<<<<<< HEAD
-=======
 var vertices = [
     vec3(-0.5, 0.0, 0.0),
     vec3(0.0, 0.0, 0.5),
@@ -22,7 +20,6 @@ var vertices = [
     vec3(0.0, 16.0, 0.0),
     vec3(-1.7, 21.0, 1.4)
 ];
->>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
@@ -68,16 +65,13 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-<<<<<<< HEAD
     
     drawTree(0.1, 0.1, 0.2, 0.2, 0.3, 0.1);
     drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 0.1);
     drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.3);
     drawTree(0.5, -0.9, 0.2, -0.5, 0.4, 0.2);
     drawTree(1.0, -0.2, 0.3, -0.5, 0.2, 0.5);    
-=======
 
->>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
@@ -275,7 +269,6 @@ function analyzeAudio() {
     lights[0].diffuse = vec4(frequency[4]/20000, frequency[4]/15000, frequency[4]/210000, 1.0);
 }
 
-<<<<<<< HEAD
 function drawTree(a, b, c, d, e, f) {
     //var r1 = Math.random();
     //var a2 = 
@@ -297,28 +290,6 @@ function drawTree(a, b, c, d, e, f) {
         geo.push( points[indices[i]] );
         normals.push ( points[indices[i]] );
     }
-    
-=======
-function drawTree(a, b, c, d) {
-    geo.push(a);
-    normals.push(a[0],a[1], a[2], 0.0);
-    geo.push(b);
-    normals.push(b[0],b[1], a[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
-    geo.push(b);
-    normals.push(b[0],b[1], b[2], 0.0);
-    geo.push(c);
-    normals.push(c[0],c[1], c[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
-    geo.push(a);
-    normals.push(a[0],a[1], a[2], 0.0);
-    geo.push(c);
-    normals.push(c[0],c[1], c[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
->>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
 }
 
 /********  Interface  ********/
