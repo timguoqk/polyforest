@@ -12,16 +12,6 @@ var time_old = 0;
 var _camera, _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
 
-var vertices = [
-                vec3(-0.5, 0.0, 0.0),
-                vec3(0.0, 0.0, 0.5),
-                vec3(0.5, 0.0, 0.0), 
-                vec3(0.0, 20.0, 0.0),
-                vec3(-0.1, 17.0, 0.0),
-                vec3(0.0, 17.0, 0.1),
-                vec3(0.0, 16.0, 0.0),
-                vec3(-1.7, 21.0, 1.4)
-    ];
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
@@ -67,8 +57,11 @@ window.onload = function() {
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
     
-    drawTree(vertices[0], vertices[1], vertices[2], vertices[3]);
-    drawTree(vertices[4], vertices[5], vertices[6], vertices[7]);
+    drawTree(0.1, 0.1, 0.2, 0.2, 0.3, 0.1);
+    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 0.1);
+    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.3);
+    drawTree(0.5, -0.9, 0.2, -0.5, 0.4, 0.2);
+    drawTree(1.0, -0.2, 0.3, -0.5, 0.2, 0.5);    
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
@@ -177,8 +170,8 @@ function render() {
             i = i - 1;
         } else {
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
-            gl.drawArrays(gl.TRIANGLES, 0, 9);
-            gl.drawArrays(gl.TRIANGLES, 9, geo.length  - 9);
+            var index = Math.floor(Math.random()/0.2);
+            gl.drawArrays(gl.TRIANGLES, 45*index, 45);
         }
     }
 
@@ -236,26 +229,27 @@ function render() {
 }
 
 
-function drawTree(a, b, c, d) {
-    geo.push(a);
-    normals.push(a[0],a[1], a[2], 0.0);
-    geo.push(b);
-    normals.push(b[0],b[1], a[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
-    geo.push(b);
-    normals.push(b[0],b[1], b[2], 0.0);
-    geo.push(c);
-    normals.push(c[0],c[1], c[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
-    geo.push(a);
-    normals.push(a[0],a[1], a[2], 0.0);
-    geo.push(c);
-    normals.push(c[0],c[1], c[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
+function drawTree(a, b, c, d, e, f) {
+    //var r1 = Math.random();
+    //var a2 = 
+    var points = [];
+    points.push( vec3(-1,0,0) );
+    points.push( vec3(1,0,0) );
+    points.push( vec3(0,0,1.7) );
+    points.push( add(vec3(a,5.0,b),vec3(-0.6,0,0)) );
+    points.push( add(vec3(a,5.0,b),vec3(0.6,0,0)) );
+    points.push( add(vec3(a,5.0,b),vec3(0,0,1.0)) );
+    points.push( add(vec3(c,10.0,d),vec3(-0.3,0,0)) );
+    points.push( add(vec3(c,10.0,d),vec3(0.3,0,0)) );
+    points.push( add(vec3(c,10.0,d),vec3(0,0,0.5)) );
+    points.push( vec3(e,15,f) );
 
+    var indices = [0,2,5,0,5,3,3,5,8,3,8,6,6,8,9,2,1,5,5,1,4,5,4,8,8,4,7,7,8,9,0,1,3,3,1,4,3,4,6,6,4,7,6,7,9];
+    for ( var i = 0; i < indices.length; ++i ) 
+    {
+        geo.push( points[indices[i]] );
+        normals.push ( points[indices[i]] );
+    }
     
 }
 
