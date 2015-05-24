@@ -1,21 +1,32 @@
 var canvas;
 var gl;
 var groundSize, ground, groundBuffer;
-var geoNumber, geo, geoBuffer;
-var normals, normalBuffer;
-var geo = [];
-var normals = [];
-var projection, camera;
-var inv_projection;
+var geoNumber, geo = [], geoBuffer;
+var normals = [], normalBuffer;
+var projection, inv_projection;
 var locations = [];  //locations of geometries
 var time_old = 0;
-var _camera, _vPosition, _projection, _modelView, _normal; //handles
+var _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
+var analyser, frequency;
 
+<<<<<<< HEAD
+=======
+var vertices = [
+    vec3(-0.5, 0.0, 0.0),
+    vec3(0.0, 0.0, 0.5),
+    vec3(0.5, 0.0, 0.0), 
+    vec3(0.0, 20.0, 0.0),
+    vec3(-0.1, 17.0, 0.0),
+    vec3(0.0, 17.0, 0.1),
+    vec3(0.0, 16.0, 0.0),
+    vec3(-1.7, 21.0, 1.4)
+];
+>>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
-    ambient: vec4(1.0, 1.0, 1.0, 0.1),
+    ambient: vec4(1.0, 1.0, 1.0, 0.2),
     // diffuse: vec4(1.0, 1.0, 1.0, 0.2),
     diffuse: vec4(1.0, 1.0, 1.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
@@ -42,7 +53,8 @@ window.ondeviceorientation = gyroscopeHandler;
 window.onload = function() {
     var canvas = document.getElementById("gl-canvas");
     gl = WebGLUtils.setupWebGL(canvas);
-    if (!gl) { alert("WebGL isn't available"); }
+    if (!gl)
+        alert("WebGL isn't available");
     gl.viewport(0, 0, canvas.width, canvas.height);
     
     // Set clear color to be black
@@ -56,12 +68,16 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
+<<<<<<< HEAD
     
     drawTree(0.1, 0.1, 0.2, 0.2, 0.3, 0.1);
     drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 0.1);
     drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.3);
     drawTree(0.5, -0.9, 0.2, -0.5, 0.4, 0.2);
     drawTree(1.0, -0.2, 0.3, -0.5, 0.2, 0.5);    
+=======
+
+>>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
@@ -76,6 +92,8 @@ window.onload = function() {
     
     initialSetup();
     
+    drawTree(vertices[0], vertices[1], vertices[2], vertices[3]);
+    drawTree(vertices[4], vertices[5], vertices[6], vertices[7]);
     for (var i = 0; i < geoNumber; i++) {
         var x = (Math.random() -0.5) * groundSize;
         var y = 0.0;
@@ -91,6 +109,15 @@ window.onload = function() {
     gl.enableVertexAttribArray(_vPosition);
     gl.enableVertexAttribArray(_normal);
     
+    // Set up audio
+    var ctx = new AudioContext();
+    var audio = document.getElementById('bgm');
+    var audioSrc = ctx.createMediaElementSource(audio);
+    analyser = ctx.createAnalyser();  // This is global
+    audioSrc.connect(analyser);
+    audioSrc.connect(ctx.destination);
+    audio.play();
+
     animate(0);
 };
 
@@ -122,6 +149,7 @@ function animate(time) {
         else if (key.right)
             locations[i] = mult(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
     }
+    analyzeAudio();
     render();
     window.requestAnimationFrame(animate);
 }
@@ -228,7 +256,26 @@ function render() {
     }
 }
 
+function analyzeAudio() {
+    var frequencyData = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(frequencyData);
 
+    frequency = [];
+    for (var i = 0; i < 5; i ++) {
+        frequency.push(0);
+        for (var j = 0; j < 200; j ++)
+            frequency[i] += frequencyData[10*i + j];
+    }
+    // Push the sum to the array
+    frequency.push(frequency.reduce(function(previousValue, currentValue) {
+        return previousValue + currentValue;
+    }));
+
+    // Apply frequency to lights
+    lights[0].diffuse = vec4(frequency[4]/20000, frequency[4]/15000, frequency[4]/210000, 1.0);
+}
+
+<<<<<<< HEAD
 function drawTree(a, b, c, d, e, f) {
     //var r1 = Math.random();
     //var a2 = 
@@ -251,6 +298,27 @@ function drawTree(a, b, c, d, e, f) {
         normals.push ( points[indices[i]] );
     }
     
+=======
+function drawTree(a, b, c, d) {
+    geo.push(a);
+    normals.push(a[0],a[1], a[2], 0.0);
+    geo.push(b);
+    normals.push(b[0],b[1], a[2], 0.0);
+    geo.push(d);
+    normals.push(d[0],d[1], d[2], 0.0);
+    geo.push(b);
+    normals.push(b[0],b[1], b[2], 0.0);
+    geo.push(c);
+    normals.push(c[0],c[1], c[2], 0.0);
+    geo.push(d);
+    normals.push(d[0],d[1], d[2], 0.0);
+    geo.push(a);
+    normals.push(a[0],a[1], a[2], 0.0);
+    geo.push(c);
+    normals.push(c[0],c[1], c[2], 0.0);
+    geo.push(d);
+    normals.push(d[0],d[1], d[2], 0.0);
+>>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
 }
 
 /********  Interface  ********/
@@ -355,7 +423,6 @@ function inverse4(m) {
 
 function find_clip_coord(location, offset) {
     var pos1 = times(location, vec4(offset, 0.0, - offset, 1.0));
-    //pos = times(camera, pos);
     pos1 = times(projection, pos1);
     var pos2 = times(location, vec4(- offset, 0.0, - offset, 1.0));
     pos2 = times(projection, pos2);
@@ -367,4 +434,10 @@ function find_clip_coord(location, offset) {
     pos.push(Math.max(Math.abs(pos1[3]), Math.abs(pos2[3])));    
 
     return pos;
+}
+
+// From http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
+function shadeColor1(color, percent) {  
+    var num = parseInt(color.slice(1),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
 }
