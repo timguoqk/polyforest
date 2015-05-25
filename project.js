@@ -5,15 +5,28 @@ var geoNumber, geo = [], geoBuffer;
 var normals = [], normalBuffer;
 var projection, inv_projection;
 var locations = [];  //locations of geometries
-var time_old = 0;
+var time_old = 0, next_sample_time = 0, sampleT = 1;
 var _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
-var analyser, frequency;
+var analyser, frequencyHistory = [];
 
+<<<<<<< HEAD
+=======
+var vertices = [
+    vec3(-0.5, 0.0, 0.0),
+    vec3(0.0, 0.0, 0.5),
+    vec3(0.5, 0.0, 0.0), 
+    vec3(0.0, 20.0, 0.0),
+    vec3(-0.1, 17.0, 0.0),
+    vec3(0.0, 17.0, 0.1),
+    vec3(0.0, 16.0, 0.0),
+    vec3(-1.7, 21.0, 1.4)
+];
+>>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
-    ambient: vec4(1.0, 1.0, 1.0, 0.2),
+    ambient: vec4(1.0, 1.0, 1.0, 0.5),
     // diffuse: vec4(1.0, 1.0, 1.0, 0.2),
     diffuse: vec4(1.0, 1.0, 1.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
@@ -55,6 +68,7 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
+<<<<<<< HEAD
 
     
     drawTree(0.1, 0.1, -0.2, 0.2, -1.5, 0.8, 1.2, 0.7);
@@ -62,6 +76,14 @@ window.onload = function() {
     drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.9, 1.4, 0.8);
     drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
     drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
+=======
+    
+    drawTree(0.1, 0.1, 0.2, 0.2, 0.3, 0.1);
+    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 0.1);
+    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.3);
+    drawTree(0.5, -0.9, 0.2, -0.5, 0.4, 0.2);
+    drawTree(1.0, -0.2, 0.3, -0.5, 0.2, 0.5);    
+>>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
 
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
@@ -132,7 +154,10 @@ function animate(time) {
         else if (key.right)
             locations[i] = mult(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
     }
-    analyzeAudio();
+    if (next_sample_time < time) {
+        next_sample_time += sampleT;
+        analyzeAudio();
+    }
     render();
     window.requestAnimationFrame(animate);
 }
@@ -182,7 +207,13 @@ function render() {
             i = i - 1;
         } else {
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
+<<<<<<< HEAD
             gl.drawArrays(gl.TRIANGLES, 45*(i%5), 45);
+=======
+            // var index = Math.floor(Math.random()/0.2);
+            var index = 3;
+            gl.drawArrays(gl.TRIANGLES, 45*index, 45);
+>>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
         }
     }
 
@@ -243,22 +274,37 @@ function analyzeAudio() {
     var frequencyData = new Uint8Array(analyser.frequencyBinCount);
     analyser.getByteFrequencyData(frequencyData);
 
-    frequency = [];
+    var f = [];
     for (var i = 0; i < 5; i ++) {
-        frequency.push(0);
-        for (var j = 0; j < 200; j ++)
-            frequency[i] += frequencyData[10*i + j];
+        f.push(0);
+        for (var j = 0; j < 50; j ++)
+            f[i] += frequencyData[50*i + j];
     }
     // Push the sum to the array
-    frequency.push(frequency.reduce(function(previousValue, currentValue) {
+    f.push(f.reduce(function(previousValue, currentValue) {
         return previousValue + currentValue;
     }));
 
+    frequencyHistory.push(f);
+    if (frequencyHistory.length > 5)
+        frequencyHistory.shift();
+    
+    var frequency = frequencyHistory.reduce(function(prev, current) {
+        var res = [];
+        for (var i = 0; i < 6; i ++)
+            res.push((prev[i] + current[i]) / 2);
+        return res;
+    });
+
     // Apply frequency to lights
-    lights[0].diffuse = vec4(frequency[4]/20000, frequency[4]/15000, frequency[4]/210000, 1.0);
+    lights[0].diffuse = vec4(frequency[4]/4000 + 0.1, frequency[4]/3000 + 0.1, frequency[4]/4200 + 0.1, 1.0);
 }
 
+<<<<<<< HEAD
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
+=======
+function drawTree(a, b, c, d, e, f) {
+>>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
     //var r1 = Math.random();
     //var a2 = 
     var points = [];
