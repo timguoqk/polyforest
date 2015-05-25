@@ -333,21 +333,22 @@ function clickHandler(event) {
     lights.push(light);
 }
 
-var betaHistory = [];
+var alphaHistory = [0];
 function gyroscopeHandler(event) {
-    if (!event.beta)
+    if (!event.alpha)
         return; // Not supported
-    betaHistory.push(Math.round(event.beta));
-    if (betaHistory.length > 5)
-        betaHistory.shift();
-    var beta = betaHistory[0];
-    for (var i = 1; i < betaHistory.length; i ++)
-        beta = (beta + betaHistory[i])/2;
-
+    alphaHistory.push(event.alpha);
+    if (alphaHistory.length > 5)
+        alphaHistory.shift();
+    var alpha = alphaHistory[0];
+    for (var i = 1; i < alphaHistory.length; i ++)
+        alpha = (alpha + alphaHistory[i])/2;
+    var dalpha = alpha - alphaHistory[alphaHistory.length - 1];
+    console.log(dalpha);
     for (var i = 0; i < locations.length; i ++)
-        locations[i] = mult(locations[i], rotate(beta, [0, 1, 0]));
+        locations[i] = mult(rotate(dalpha, [0, 1, 0]), locations[i]);
     for (var i = 0; i < lights.length; i ++)
-        lights[i].position = mult(lights[i].position, rotate(beta, [0, 1, 0]));
+        lights[i].position = times(rotate(dalpha, [0, 1, 0]), lights[i].position);
 }
 
 function setUniformLights(material) {
