@@ -10,19 +10,6 @@ var _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequency;
 
-<<<<<<< HEAD
-=======
-var vertices = [
-    vec3(-0.5, 0.0, 0.0),
-    vec3(0.0, 0.0, 0.5),
-    vec3(0.5, 0.0, 0.0), 
-    vec3(0.0, 20.0, 0.0),
-    vec3(-0.1, 17.0, 0.0),
-    vec3(0.0, 17.0, 0.1),
-    vec3(0.0, 16.0, 0.0),
-    vec3(-1.7, 21.0, 1.4)
-];
->>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
@@ -68,16 +55,14 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-<<<<<<< HEAD
-    
-    drawTree(0.1, 0.1, 0.2, 0.2, 0.3, 0.1);
-    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 0.1);
-    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.3);
-    drawTree(0.5, -0.9, 0.2, -0.5, 0.4, 0.2);
-    drawTree(1.0, -0.2, 0.3, -0.5, 0.2, 0.5);    
-=======
 
->>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
+    
+    drawTree(0.1, 0.1, -0.2, 0.2, -1.5, 0.8, 1.2, 0.7);
+    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 1.0, 1.1, 0.9);
+    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.9, 1.4, 0.8);
+    drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
+    drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
+
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
@@ -92,8 +77,6 @@ window.onload = function() {
     
     initialSetup();
     
-    drawTree(vertices[0], vertices[1], vertices[2], vertices[3]);
-    drawTree(vertices[4], vertices[5], vertices[6], vertices[7]);
     for (var i = 0; i < geoNumber; i++) {
         var x = (Math.random() -0.5) * groundSize;
         var y = 0.0;
@@ -182,12 +165,13 @@ function render() {
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray( _vPosition );
+    //gl.enableVertexAttribArray( _vPosition );
     // Set up light
     setUniformLights(materials.ground);
 
     var offset = 0.01; //decided by bounding volume
     for (var i = 0; i < locations.length; i++) {
+        //var index = Math.floor(Math.random()/0.2);
         var pos = find_clip_coord(locations[i], offset);
         //console.log(pos);
         var z = pos[2] / pos[3];
@@ -198,8 +182,7 @@ function render() {
             i = i - 1;
         } else {
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
-            var index = Math.floor(Math.random()/0.2);
-            gl.drawArrays(gl.TRIANGLES, 45*index, 45);
+            gl.drawArrays(gl.TRIANGLES, 45*(i%5), 45);
         }
     }
 
@@ -275,21 +258,20 @@ function analyzeAudio() {
     lights[0].diffuse = vec4(frequency[4]/20000, frequency[4]/15000, frequency[4]/210000, 1.0);
 }
 
-<<<<<<< HEAD
-function drawTree(a, b, c, d, e, f) {
+function drawTree(a, b, c, d, e, f, factor1, factor2) {
     //var r1 = Math.random();
     //var a2 = 
     var points = [];
-    points.push( vec3(-1,0,0) );
-    points.push( vec3(1,0,0) );
-    points.push( vec3(0,0,1.7) );
-    points.push( add(vec3(a,5.0,b),vec3(-0.6,0,0)) );
-    points.push( add(vec3(a,5.0,b),vec3(0.6,0,0)) );
-    points.push( add(vec3(a,5.0,b),vec3(0,0,1.0)) );
-    points.push( add(vec3(c,10.0,d),vec3(-0.3,0,0)) );
-    points.push( add(vec3(c,10.0,d),vec3(0.3,0,0)) );
-    points.push( add(vec3(c,10.0,d),vec3(0,0,0.5)) );
-    points.push( vec3(e,15,f) );
+    points.push( vec3(-0.5, 0, 0) );
+    points.push( vec3(0.5, 0, 0) );
+    points.push( vec3(0, 0, 0.8) );
+    points.push( add(vec3(a,5.0*factor1,b),vec3(-0.3, 0, 0)) );
+    points.push( add(vec3(a,5.0*factor1,b),vec3(0.3, 0, 0)) );
+    points.push( add(vec3(a,5.0*factor1,b),vec3(0, 0, 0.5)) );
+    points.push( add(vec3(c,10.0*factor1,d),vec3(-0.15, 0, 0)) );
+    points.push( add(vec3(c,10.0*factor1,d),vec3(0.15, 0, 0)) );
+    points.push( add(vec3(c,10.0*factor1,d),vec3(0, 0, 0.25)) );
+    points.push( vec3(e,15*factor2,f) );
 
     var indices = [0,2,5,0,5,3,3,5,8,3,8,6,6,8,9,2,1,5,5,1,4,5,4,8,8,4,7,7,8,9,0,1,3,3,1,4,3,4,6,6,4,7,6,7,9];
     for ( var i = 0; i < indices.length; ++i ) 
@@ -297,29 +279,9 @@ function drawTree(a, b, c, d, e, f) {
         geo.push( points[indices[i]] );
         normals.push ( points[indices[i]] );
     }
-    
-=======
-function drawTree(a, b, c, d) {
-    geo.push(a);
-    normals.push(a[0],a[1], a[2], 0.0);
-    geo.push(b);
-    normals.push(b[0],b[1], a[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
-    geo.push(b);
-    normals.push(b[0],b[1], b[2], 0.0);
-    geo.push(c);
-    normals.push(c[0],c[1], c[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
-    geo.push(a);
-    normals.push(a[0],a[1], a[2], 0.0);
-    geo.push(c);
-    normals.push(c[0],c[1], c[2], 0.0);
-    geo.push(d);
-    normals.push(d[0],d[1], d[2], 0.0);
->>>>>>> 4c32adae935a469a04daa177ddb6c536a9d99854
 }
+    
+
 
 /********  Interface  ********/
 
@@ -441,3 +403,4 @@ function shadeColor1(color, percent) {
     var num = parseInt(color.slice(1),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
     return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
 }
+
