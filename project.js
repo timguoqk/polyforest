@@ -159,7 +159,7 @@ function render() {
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
-    //gl.enableVertexAttribArray( _vPosition );
+    gl.enableVertexAttribArray( _vPosition );
     // Set up light
     setUniformLights(materials.ground);
 
@@ -252,7 +252,14 @@ function analyzeAudio() {
     frequencyHistory.push(f);
     if (frequencyHistory.length > 5)
         frequencyHistory.shift();
-    
+    /*
+        Mean: 7556.728101976377, Max: 10433, Pstdev: 1865.9577103153833
+        Mean: 4625.7136007484505, Max: 8414, Pstdev: 1906.474273983962
+        Mean: 3624.1598643433517, Max: 8131, Pstdev: 1908.5070876283664
+        Mean: 3140.3971465325694, Max: 8455, Pstdev: 1931.6290092952563
+        Mean: 2697.0495848438777, Max: 7369, Pstdev: 1928.8492120964333
+        Mean: 21644.048298444628, Max: 38468, Pstdev: 8950.926632696443
+    */
     var frequency = frequencyHistory.reduce(function(prev, current) {
         var res = [];
         for (var i = 0; i < 6; i ++)
@@ -261,7 +268,7 @@ function analyzeAudio() {
     });
 
     // Apply frequency to lights
-    lights[0].diffuse = vec4(frequency[4]/4000 + 0.1, frequency[4]/3000 + 0.1, frequency[4]/4200 + 0.1, 1.0);
+    lights[0].diffuse = vec4(frequency[4]/5000 + 0.1, frequency[4]/4000 + 0.1, frequency[4]/5200 + 0.1, 1.0);
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
@@ -320,17 +327,16 @@ function clickHandler(event) {
     var clickLoc = vec4(event.clientX, event.clientY, 0, 1);
     clickLoc = times(inv_projection, clickLoc);
     clickLoc = times(inv_camera, clickLoc);
+    clickLoc[2] = 10;
     clickLoc[3] = 1;
     // TODO: lights should vary
-    var light = {
+    lights.push({
         position: clickLoc,
         ambient: vec4(0.2, 0.2, 0.2, 1.0),
         diffuse: vec4(1.0, 1.0, 1.0, 1.0),
         specular: vec4(1.0, 1.0, 1.0, 1.0),
         age: 0
-    };
-
-    lights.push(light);
+    });
 }
 
 var betaHistory = [];
