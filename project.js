@@ -3,28 +3,16 @@ var gl;
 var groundSize, ground, groundBuffer;
 var geoNumber, geo = [], geoBuffer;
 var normals = [], normalBuffer;
-var projection, inv_projection;
+var projection, inv_projection, camera, inv_camera;
 var locations = [];  //locations of geometries
 var time_old = 0, next_sample_time = 0, sampleT = 1;
-var _vPosition, _projection, _modelView, _normal; //handles
+var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition, _shininess, _lightNum;
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 
-var vertices = [
-    vec3(-0.5, 0.0, 0.0),
-    vec3(0.0, 0.0, 0.5),
-    vec3(0.5, 0.0, 0.0), 
-    vec3(0.0, 20.0, 0.0),
-    vec3(-0.1, 17.0, 0.0),
-    vec3(0.0, 17.0, 0.1),
-    vec3(0.0, 16.0, 0.0),
-    vec3(-1.7, 21.0, 1.4)
-];
-
 var lights = [{
-    position: vec4(1.0, 1.0, 1.0, 0.0),
-    ambient: vec4(1.0, 1.0, 1.0, 0.5),
-    // diffuse: vec4(1.0, 1.0, 1.0, 0.2),
+    position: vec4(10.0, 10.0, 10.0, 1.0),
+    ambient: vec4(1.0, 1.0, 1.0, 1.0),
     diffuse: vec4(1.0, 1.0, 1.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
     age: 0  // Lights will decay (except the global ambient light)
@@ -65,12 +53,12 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-    
-    drawTree(0.1, 0.1, 0.2, 0.2, 0.3, 0.1);
-    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 0.1);
-    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.3);
-    drawTree(0.5, -0.9, 0.2, -0.5, 0.4, 0.2);
-    drawTree(1.0, -0.2, 0.3, -0.5, 0.2, 0.5);    
+
+    drawTree(0.1, 0.1, -0.2, 0.2, -1.5, 0.8, 1.2, 0.7);
+    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 1.0, 1.1, 0.9);
+    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.9, 1.4, 0.8);
+    drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
+    drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
 
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
@@ -78,16 +66,15 @@ window.onload = function() {
     _modelView = gl.getUniformLocation(program, "modelView");
     _normal = gl.getAttribLocation(program, "normal");
     _normalMatrix = gl.getUniformLocation(program, "normalMatrix");
-    _ambientProduct = gl.getUniformLocation(program, "ambientProduct")
-    _diffuseProduct = gl.getUniformLocation(program, "diffuseProduct")
-    _specularProduct = gl.getUniformLocation(program, "specularProduct")
-    _lightPosition = gl.getUniformLocation(program, "lightPosition")
-    _shininess = gl.getUniformLocation(program, "shininess")
+    _ambientProduct = gl.getUniformLocation(program, "ambientProduct");
+    _diffuseProduct = gl.getUniformLocation(program, "diffuseProduct");
+    _specularProduct = gl.getUniformLocation(program, "specularProduct");
+    _lightPosition = gl.getUniformLocation(program, "lightPosition");
+    _shininess = gl.getUniformLocation(program, "shininess");
+    _lightNum = gl.getUniformLocation(program, "lightNum");
     
     initialSetup();
     
-    drawTree(vertices[0], vertices[1], vertices[2], vertices[3]);
-    drawTree(vertices[4], vertices[5], vertices[6], vertices[7]);
     for (var i = 0; i < geoNumber; i++) {
         var x = (Math.random() -0.5) * groundSize;
         var y = 0.0;
@@ -121,6 +108,7 @@ function initialSetup() {
     
     camera = translate(0.0, -10, 0.0);
     projection = perspective(40, 960./540, 0.01, groundSize);
+    inv_camera = inverse4(camera);
     inv_projection = inverse4(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
               groundSize / 2, 0.0, 0.0,
@@ -135,7 +123,6 @@ function initialSetup() {
 function animate(time) {
     var dt = time - time_old;
     time_old = time;
-    //camera = mult(translate(0.0, 0.0, 0.01 * dt), camera);
     for (var i = 0; i < locations.length; i++) {
         locations[i] = mult(translate(0.0, 0.0, 0.001 * dt), locations[i]);
         if (key.left)
@@ -160,15 +147,8 @@ function render() {
     gl.bufferData(gl.ARRAY_BUFFER, flatten(ground), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
 
-    var modelViewMatrix = camera;
-    normalMatrix = [
-        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
-        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
-        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
-    ];
-    gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
-    gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
-
+    setModelViewAndNormalMatrix(camera);
+    
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     
     // Draw geometries
@@ -179,12 +159,13 @@ function render() {
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray( _vPosition );
+    //gl.enableVertexAttribArray( _vPosition );
     // Set up light
     setUniformLights(materials.ground);
 
     var offset = 0.01; //decided by bounding volume
     for (var i = 0; i < locations.length; i++) {
+        //var index = Math.floor(Math.random()/0.2);
         var pos = find_clip_coord(locations[i], offset);
         //console.log(pos);
         var z = pos[2] / pos[3];
@@ -194,9 +175,8 @@ function render() {
             locations.splice(i, 1);
             i = i - 1;
         } else {
-            gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
-            var index = Math.floor(Math.random()/0.2);
-            gl.drawArrays(gl.TRIANGLES, 45*index, 45);
+            setModelViewAndNormalMatrix(mult(camera, locations[i]));
+            gl.drawArrays(gl.TRIANGLES, 0, 45);
         }
     }
 
@@ -290,9 +270,10 @@ function analyzeAudio() {
             f[i] += frequencyData[50*i + j];
     }
     // Push the sum to the array
-    f.push(f.reduce(function(previousValue, currentValue) {
-        return previousValue + currentValue;
-    }));
+    var total = 0;
+    for (var i = 0; i < f.length; i ++)
+        total += f[i];
+    f.push(total);
 
     frequencyHistory.push(f);
     if (frequencyHistory.length > 5)
@@ -309,20 +290,20 @@ function analyzeAudio() {
     lights[0].diffuse = vec4(frequency[4]/4000 + 0.1, frequency[4]/3000 + 0.1, frequency[4]/4200 + 0.1, 1.0);
 }
 
-function drawTree(a, b, c, d, e, f) {
+function drawTree(a, b, c, d, e, f, factor1, factor2) {
     //var r1 = Math.random();
     //var a2 = 
     var points = [];
-    points.push( vec3(-1,0,0) );
-    points.push( vec3(1,0,0) );
-    points.push( vec3(0,0,1.7) );
-    points.push( add(vec3(a,5.0,b),vec3(-0.6,0,0)) );
-    points.push( add(vec3(a,5.0,b),vec3(0.6,0,0)) );
-    points.push( add(vec3(a,5.0,b),vec3(0,0,1.0)) );
-    points.push( add(vec3(c,10.0,d),vec3(-0.3,0,0)) );
-    points.push( add(vec3(c,10.0,d),vec3(0.3,0,0)) );
-    points.push( add(vec3(c,10.0,d),vec3(0,0,0.5)) );
-    points.push( vec3(e,15,f) );
+    points.push( vec3(-0.5, 0, 0) );
+    points.push( vec3(0.5, 0, 0) );
+    points.push( vec3(0, 0, 0.8) );
+    points.push( add(vec3(a,5.0*factor1,b),vec3(-0.3, 0, 0)) );
+    points.push( add(vec3(a,5.0*factor1,b),vec3(0.3, 0, 0)) );
+    points.push( add(vec3(a,5.0*factor1,b),vec3(0, 0, 0.5)) );
+    points.push( add(vec3(c,10.0*factor1,d),vec3(-0.15, 0, 0)) );
+    points.push( add(vec3(c,10.0*factor1,d),vec3(0.15, 0, 0)) );
+    points.push( add(vec3(c,10.0*factor1,d),vec3(0, 0, 0.25)) );
+    points.push( vec3(e,15*factor2,f) );
 
     var indices = [0,2,5,0,5,3,3,5,8,3,8,6,6,8,9,2,1,5,5,1,4,5,4,8,8,4,7,7,8,9,0,1,3,3,1,4,3,4,6,6,4,7,6,7,9];
     for ( var i = 0; i < indices.length; ++i ) 
@@ -331,6 +312,8 @@ function drawTree(a, b, c, d, e, f) {
         normals.push ( points[indices[i]] );
     }
 }
+    
+
 
 /********  Interface  ********/
 
@@ -360,29 +343,37 @@ function clickHandler(event) {
     if (lights.length == MAX_LIGHTS)
         return;
 
-    var x = event.clientX;
-    var y = event.clientY;
+    var clickLoc = vec4(event.clientX, event.clientY, 0, 1);
+    clickLoc = times(inv_projection, clickLoc);
+    clickLoc = times(inv_camera, clickLoc);
+    clickLoc[3] = 1;
     // TODO: lights should vary
     var light = {
-        position: vec4(1.0, 1.0, 1.0, 0.0),
+        position: clickLoc,
         ambient: vec4(0.2, 0.2, 0.2, 1.0),
         diffuse: vec4(1.0, 1.0, 1.0, 1.0),
         specular: vec4(1.0, 1.0, 1.0, 1.0),
         age: 0
     };
+
     lights.push(light);
 }
 
 var betaHistory = [];
 function gyroscopeHandler(event) {
+    if (!event.beta)
+        return; // Not supported
     betaHistory.push(Math.round(event.beta));
     if (betaHistory.length > 5)
         betaHistory.shift();
-    var beta = betaHistory.reduce(function(prev, current) {
-        return (prev + current) / 2;
-    });
-    camera = translate(0.0, -0.5, 0.0);
-    camera = mult(camera, rotate(beta, [0, 1, 0]));
+    var beta = betaHistory[0];
+    for (var i = 1; i < betaHistory.length; i ++)
+        beta = (beta + betaHistory[i])/2;
+
+    for (var i = 0; i < locations.length; i ++)
+        locations[i] = mult(locations[i], rotate(beta, [0, 1, 0]));
+    for (var i = 0; i < lights.length; i ++)
+        lights[i].position = mult(lights[i].position, rotate(beta, [0, 1, 0]));
 }
 
 function setUniformLights(material) {
@@ -402,6 +393,7 @@ function setUniformLights(material) {
         po.push(0.0);
     }
 
+    gl.uniform1i(_lightNum, lights.length);
     gl.uniform4fv(_ambientProduct, flatten(am));
     gl.uniform4fv(_diffuseProduct, flatten(di));
     gl.uniform4fv(_specularProduct, flatten(sp));
@@ -447,8 +439,19 @@ function find_clip_coord(location, offset) {
     return pos;
 }
 
+function setModelViewAndNormalMatrix(modelViewMatrix) {
+    var normalMatrix = [
+        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
+        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
+        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
+    ];
+    gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
+    gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
+}
+
 // From http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
 function shadeColor1(color, percent) {  
     var num = parseInt(color.slice(1),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
     return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
 }
+
