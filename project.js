@@ -195,7 +195,8 @@ function render() {
             i = i - 1;
         } else {
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
-            var index = Math.floor(Math.random()/0.2);
+            // var index = Math.floor(Math.random()/0.2);
+            var index = 3;
             gl.drawArrays(gl.TRIANGLES, 45*index, 45);
         }
     }
