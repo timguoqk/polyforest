@@ -108,8 +108,8 @@ function initialSetup() {
     
     camera = translate(0.0, -10, 0.0);
     projection = perspective(40, 960./540, 0.01, groundSize);
-    inv_camera = inverse4(camera);
-    inv_projection = inverse4(projection);
+    inv_camera = inverseCamera(camera);
+    inv_projection = inverseProjection(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
               groundSize / 2, 0.0, 0.0,
               - groundSize / 2, 0.0, - groundSize,
@@ -418,7 +418,7 @@ function times(matrix, vector) {
     return result;
 }
 
-function inverse4(m) {
+function inverseProjection(m) {
     var a = m[0][0];
     var b = m[1][1];
     var c = m[2][2];
@@ -429,6 +429,15 @@ function inverse4(m) {
     inv.push(vec4(0.0, 0.0, 0.0, -1.0));
     inv.push(vec4(0.0, 0.0, 1 / d, c / d));
     return inv;
+}
+
+function inverseCamera(m) {
+    var res = [];
+    res.push([m[0][0], m[0][1], m[0][2], -m[0][3]]);
+    res.push([m[1][0], m[1][1], m[1][2], -m[1][3]]);
+    res.push([m[2][0], m[2][1], m[2][2], -m[2][3]]);
+    res.push([m[3][0], m[3][1], m[3][2], m[3][3]]);
+    return res;
 }
 
 function find_clip_coord(location, offset) {
