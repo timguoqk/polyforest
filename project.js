@@ -3,19 +3,21 @@ var gl;
 var groundSize, ground, groundBuffer;
 var geoNumber, geo = [], geoBuffer, index = [];
 var normals = [], normalBuffer;
-var projection, inv_projection;
+var projection, inv_projection, camera, inv_camera;
 var locations = [];  //locations of geometries
 var time_old = 0, next_sample_time = 0, sampleT = 1;
-var _vPosition, _projection, _modelView, _normal; //handles
+var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition, _shininess, _lightNum;
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
 var lights = [{
-    position: vec4(1.0, 1.0, 1.0, 0.0),
-    ambient: vec4(1.0, 1.0, 1.0, 0.5),
-    // diffuse: vec4(1.0, 1.0, 1.0, 0.2),
+    position: vec4(10.0, 10.0, 10.0, 1.0),
+    ambient: vec4(1.0, 1.0, 1.0, 1.0),
     diffuse: vec4(1.0, 1.0, 1.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
     age: 0  // Lights will decay (except the global ambient light)
@@ -56,13 +58,20 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
+<<<<<<< HEAD
  
+=======
+
+>>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
     drawTree(0.1, 0.1, -0.2, 0.2, -1.5, 0.8, 1.2, 0.7);
     drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 1.0, 1.1, 0.9);
     drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.9, 1.4, 0.8);
     drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
     drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
+<<<<<<< HEAD
 
+=======
+>>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
 
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
@@ -70,11 +79,12 @@ window.onload = function() {
     _modelView = gl.getUniformLocation(program, "modelView");
     _normal = gl.getAttribLocation(program, "normal");
     _normalMatrix = gl.getUniformLocation(program, "normalMatrix");
-    _ambientProduct = gl.getUniformLocation(program, "ambientProduct")
-    _diffuseProduct = gl.getUniformLocation(program, "diffuseProduct")
-    _specularProduct = gl.getUniformLocation(program, "specularProduct")
-    _lightPosition = gl.getUniformLocation(program, "lightPosition")
-    _shininess = gl.getUniformLocation(program, "shininess")
+    _ambientProduct = gl.getUniformLocation(program, "ambientProduct");
+    _diffuseProduct = gl.getUniformLocation(program, "diffuseProduct");
+    _specularProduct = gl.getUniformLocation(program, "specularProduct");
+    _lightPosition = gl.getUniformLocation(program, "lightPosition");
+    _shininess = gl.getUniformLocation(program, "shininess");
+    _lightNum = gl.getUniformLocation(program, "lightNum");
     
     initialSetup();
     
@@ -108,10 +118,11 @@ window.onload = function() {
 
 function initialSetup() {
     groundSize = 200.0;
-    geoNumber = 100;  // Total number of geometries
+    geoNumber = 30;  // Total number of geometries
     
     camera = translate(0.0, -10, 0.0);
     projection = perspective(40, 960./540, 0.01, groundSize);
+    inv_camera = inverse4(camera);
     inv_projection = inverse4(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
               groundSize / 2, 0.0, 0.0,
@@ -126,7 +137,6 @@ function initialSetup() {
 function animate(time) {
     var dt = time - time_old;
     time_old = time;
-    //camera = mult(translate(0.0, 0.0, 0.01 * dt), camera);
     for (var i = 0; i < locations.length; i++) {
         locations[i] = mult(translate(0.0, 0.0, 0.001 * dt), locations[i]);
         if (key.left)
@@ -151,15 +161,8 @@ function render() {
     gl.bufferData(gl.ARRAY_BUFFER, flatten(ground), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
 
-    var modelViewMatrix = camera;
-    normalMatrix = [
-        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
-        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
-        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
-    ];
-    gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
-    gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
-
+    setModelViewAndNormalMatrix(camera);
+    
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     
     // Draw geometries
@@ -170,7 +173,7 @@ function render() {
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
-    //gl.enableVertexAttribArray( _vPosition );
+    gl.enableVertexAttribArray( _vPosition );
     // Set up light
     setUniformLights(materials.ground);
 
@@ -182,22 +185,50 @@ function render() {
         var z = pos[2] / pos[3];
         var x = pos[0] / pos[3];
         var y = pos[1] / pos[3];
-        if (z > 1.0 || y > 1.0 || z > 1.0 ) {  //pop things behind the camera
+        if (x > 1.0 || y > 1.0 || z > 1.0 ) {  //pop things behind the camera
             locations.splice(i, 1);
             index.splice(i, 1);
             i = i - 1;
         } else {
+<<<<<<< HEAD
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
 
             gl.drawArrays(gl.TRIANGLES, 45*index[i], 45);
 
 
+=======
+            setModelViewAndNormalMatrix(mult(camera, locations[i]));
+            gl.drawArrays(gl.TRIANGLES, 0, 45);
+>>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
         }
     }
 
     // FIXME: @lihao http://en.wikipedia.org/wiki/Don%27t_repeat_yourself
     while (locations.length < geoNumber) {
-        var coin = Math.random();
+        if (key.right == true) {
+            var x = Math.random() * 0.5 * groundSize;
+        }
+        else if (key.left == true) {
+            var x = - Math.random() * 0.5 * groundSize;
+        }
+        else {
+            var x = (Math.random() - 0.5) * groundSize;
+        }
+        
+        var y = 0.0;
+        var z = - Math.random() * groundSize;
+        var potential = translate(vec3(x, y, z));
+        var clipped = find_clip_coord(potential, offset);
+        var x_clipped = clipped[0] / clipped[3];
+        var y_clipped = clipped[1] / clipped[3];
+        var z_clipped = clipped[2] / clipped[3];
+        //console.log(x_clipped);
+        if (x_clipped > 1.0 || y_clipped > 1.0 || z_clipped > 1.0) {
+            locations.push(potential);
+        }
+    }
+        //var coin = Math.random();
+        /*
         var x = (Math.random() - 0.5) * 2;
         var z = (Math.random() - 0.5) * 2;
         var w = (Math.random()) * groundSize;
@@ -243,6 +274,9 @@ function render() {
             index.push(Math.floor(Math.random()/0.2));
         }
     }
+    */
+
+
 
     // Lights decay, note that the first light is ambient and won't decay
     for (var i = 1; i < lights.length; i ++) {
@@ -264,14 +298,22 @@ function analyzeAudio() {
             f[i] += frequencyData[50*i + j];
     }
     // Push the sum to the array
-    f.push(f.reduce(function(previousValue, currentValue) {
-        return previousValue + currentValue;
-    }));
+    var total = 0;
+    for (var i = 0; i < f.length; i ++)
+        total += f[i];
+    f.push(total);
 
     frequencyHistory.push(f);
     if (frequencyHistory.length > 5)
         frequencyHistory.shift();
-    
+    /*
+        Mean: 7556.728101976377, Max: 10433, Pstdev: 1865.9577103153833
+        Mean: 4625.7136007484505, Max: 8414, Pstdev: 1906.474273983962
+        Mean: 3624.1598643433517, Max: 8131, Pstdev: 1908.5070876283664
+        Mean: 3140.3971465325694, Max: 8455, Pstdev: 1931.6290092952563
+        Mean: 2697.0495848438777, Max: 7369, Pstdev: 1928.8492120964333
+        Mean: 21644.048298444628, Max: 38468, Pstdev: 8950.926632696443
+    */
     var frequency = frequencyHistory.reduce(function(prev, current) {
         var res = [];
         for (var i = 0; i < 6; i ++)
@@ -280,11 +322,14 @@ function analyzeAudio() {
     });
 
     // Apply frequency to lights
-    lights[0].diffuse = vec4(frequency[4]/4000 + 0.1, frequency[4]/3000 + 0.1, frequency[4]/4200 + 0.1, 1.0);
+    lights[0].diffuse = vec4(frequency[4]/5000 + 0.1, frequency[4]/4000 + 0.1, frequency[4]/5200 + 0.1, 1.0);
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
     //var r1 = Math.random();
     //var a2 = 
     var points = [];
@@ -337,29 +382,37 @@ function clickHandler(event) {
     if (lights.length == MAX_LIGHTS)
         return;
 
-    var x = event.clientX;
-    var y = event.clientY;
+    var clickLoc = vec4(event.clientX, event.clientY, 0, 1);
+    clickLoc = times(inv_projection, clickLoc);
+    clickLoc = times(inv_camera, clickLoc);
+    clickLoc[2] = 10;
+    clickLoc[3] = 1;
     // TODO: lights should vary
-    var light = {
-        position: vec4(1.0, 1.0, 1.0, 0.0),
+    lights.push({
+        position: clickLoc,
         ambient: vec4(0.2, 0.2, 0.2, 1.0),
         diffuse: vec4(1.0, 1.0, 1.0, 1.0),
         specular: vec4(1.0, 1.0, 1.0, 1.0),
         age: 0
-    };
-    lights.push(light);
+    });
 }
 
-var betaHistory = [];
+var alphaHistory = [0];
 function gyroscopeHandler(event) {
-    betaHistory.push(Math.round(event.beta));
-    if (betaHistory.length > 5)
-        betaHistory.shift();
-    var beta = betaHistory.reduce(function(prev, current) {
-        return (prev + current) / 2;
-    });
-    camera = translate(0.0, -0.5, 0.0);
-    camera = mult(camera, rotate(beta, [0, 1, 0]));
+    if (!event.alpha)
+        return; // Not supported
+    alphaHistory.push(event.alpha);
+    if (alphaHistory.length > 5)
+        alphaHistory.shift();
+    var alpha = alphaHistory[0];
+    for (var i = 1; i < alphaHistory.length; i ++)
+        alpha = (alpha + alphaHistory[i])/2;
+    var dalpha = alpha - alphaHistory[alphaHistory.length - 1];
+    console.log(dalpha);
+    for (var i = 0; i < locations.length; i ++)
+        locations[i] = mult(rotate(dalpha, [0, 1, 0]), locations[i]);
+    for (var i = 0; i < lights.length; i ++)
+        lights[i].position = times(rotate(dalpha, [0, 1, 0]), lights[i].position);
 }
 
 function setUniformLights(material) {
@@ -379,6 +432,7 @@ function setUniformLights(material) {
         po.push(0.0);
     }
 
+    gl.uniform1i(_lightNum, lights.length);
     gl.uniform4fv(_ambientProduct, flatten(am));
     gl.uniform4fv(_diffuseProduct, flatten(di));
     gl.uniform4fv(_specularProduct, flatten(sp));
@@ -422,6 +476,16 @@ function find_clip_coord(location, offset) {
     pos.push(Math.max(Math.abs(pos1[3]), Math.abs(pos2[3])));    
 
     return pos;
+}
+
+function setModelViewAndNormalMatrix(modelViewMatrix) {
+    var normalMatrix = [
+        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
+        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
+        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
+    ];
+    gl.uniformMatrix4fv(_modelView, false, flatten(modelViewMatrix));
+    gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
 }
 
 // From http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
