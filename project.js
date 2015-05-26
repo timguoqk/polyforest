@@ -1,7 +1,7 @@
 var canvas;
 var gl;
 var groundSize, ground, groundBuffer;
-var geoNumber, geo = [], geoBuffer;
+var geoNumber, geo = [], geoBuffer, index = [];
 var normals = [], normalBuffer;
 var projection, inv_projection, camera, inv_camera;
 var locations = [];  //locations of geometries
@@ -9,6 +9,7 @@ var time_old = 0, next_sample_time = 0, sampleT = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition, _shininess, _lightNum;
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
+
 
 var lights = [{
     position: vec4(10.0, 10.0, 10.0, 1.0),
@@ -60,6 +61,7 @@ window.onload = function() {
     drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
     drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
 
+
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
     _projection = gl.getUniformLocation(program, "projection");
@@ -80,6 +82,7 @@ window.onload = function() {
         var y = 0.0;
         var z = - Math.random() * groundSize;
         locations.push(translate(vec3(x, y, z)));
+        index.push(Math.floor(Math.random()/0.2));
     }
 
     // Create buffers
@@ -173,10 +176,11 @@ function render() {
         var y = pos[1] / pos[3];
         if (x > 1.0 || y > 1.0 || z > 1.0 ) {  //pop things behind the camera
             locations.splice(i, 1);
+            index.splice(i, 1);
             i = i - 1;
         } else {
-            setModelViewAndNormalMatrix(mult(camera, locations[i]));
-            gl.drawArrays(gl.TRIANGLES, 0, 45);
+            gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
+            gl.drawArrays(gl.TRIANGLES, 45*index[i], 45);
         }
     }
 
@@ -202,6 +206,7 @@ function render() {
         //console.log(x_clipped);
         if (x_clipped > 1.0 || y_clipped > 1.0 || z_clipped > 1.0) {
             locations.push(potential);
+            index.push(Math.floor(Math.random()/0.2));
         }
     }
         //var coin = Math.random();
@@ -217,6 +222,7 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] + offset + Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         if (key.left == true) {
             clipped = vec4(-(1.0) * w, 0.0, z * w, w);
@@ -224,12 +230,14 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] - offset - Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         if (coin < 0.2) {
             clipped = vec4(x * w, 0.0, groundSize, groundSize);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         else if (coin < 0.6) {
             clipped = vec4((1.0) * w, 0.0, z * w, w);
@@ -237,6 +245,7 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] + offset + Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         else {
             clipped = vec4((- 1.0) * w, 0.0, z * w, w);
@@ -244,6 +253,7 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] - offset - Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
     }
     */
@@ -298,8 +308,7 @@ function analyzeAudio() {
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
-    //var r1 = Math.random();
-    //var a2 = 
+
     var points = [];
     points.push( vec3(-0.5, 0, 0) );
     points.push( vec3(0.5, 0, 0) );
