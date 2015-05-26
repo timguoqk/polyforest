@@ -206,6 +206,7 @@ function render() {
         //console.log(x_clipped);
         if (x_clipped > 1.0 || y_clipped > 1.0 || z_clipped > 1.0) {
             locations.push(potential);
+            index.push(Math.floor(Math.random()/0.2));
         }
     }
         //var coin = Math.random();
