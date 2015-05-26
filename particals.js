@@ -9,7 +9,7 @@ var _modelView;
 var modelView = translate(0.0, 0.0, 0.0);
 var far = 100;
 var near = 0.1;
-var projection = perspective(90, 960.0/540.0, near, far);
+var projection = perspective(40, 960.0/540.0, near, far);
 var inv_projection = inverse4(projection);
 var velocity = [];
 var speed = 3.0;
@@ -19,7 +19,7 @@ var offVec = [];
 var bufferId;
 var vPosition;
 var triangleBuffer;
-var triangle_vertex = [vec3(0.0, 0.0,0.0), vec3(0.01, 0.0, 0.0), vec3(0.0, 0.01, 0.0)];
+var triangle_vertex = [vec3(-0.001, 0.0,0.0), vec3(0.001, 0.0, 0.0), vec3(0.0, 0.001, 0.0)];
 
 
 
@@ -141,7 +141,7 @@ function updatVelocity(sepDist, detDist) {
         var diff = subtract(new_vel, velocity[i]);
         var diff_mag = length(diff);
         if (diff_mag > 0) {
-            diff = scale2(0.25/diff_mag, diff);
+            diff = scale2(0.20/diff_mag, diff);
         }
         velocity[i] = normalize(add(velocity[i] , diff));
     }
@@ -150,9 +150,13 @@ function updatVelocity(sepDist, detDist) {
 
 function generateTrueLocation() {
     for (var i = 0; i < NumPoints; i++) {
+        /*
         var clipped = scale2(1.0 /box_size, points[i]);
         var w = (2 * far * near) / (far + near - clipped[2] * (far - near));
-        true_location[i] = vec3(times(inv_projection, vec4(scale2(w, clipped), w)));
+        var temp = vec3(times(inv_projection, vec4(scale2(w, clipped), w)));
+        temp[2] = temp[2] ;
+        */
+        true_location[i] = points[i];//moduleboxsize(vec3(times(camera, vec4(points[i], 1.0))));
     }
 }
 
@@ -170,9 +174,9 @@ function setUpPoints() {
         var x = Math.cos(theta) * Math.cos(phi);
         var y = Math.sin(theta) * Math.cos(phi);
         var z = Math.sin(phi);
-        points.push(vec3(x,y,z));
+        points.push(vec3(x , y , z - 100.0));
         velocity.push(add(vec3(x,y,z), vec3(0.0, 0.0, 0.0)));
-        true_location.push(vec3(x,y,z));
+        true_location.push(vec3(times(camera,vec4(x,y,z, 1.0))));
     }
 }
 //helping functions
@@ -200,14 +204,34 @@ function times(matrix, vector) {
 }
 
 function moduleboxsize(vector) {
+    /*
     for (var i = 0; i < vector.length; i++) {
-        if (vector[i] > 0.9 * box_size) {
-            vector[i] = vector[i] - 2.0 * 0.9 * box_size;
+        if (vector[i] > 1.0 * box_size) {
+            vector[i] = vector[i] - 2.0 * 1.0 * box_size;
         }
-        else if (vector[i] < - 0.9 * box_size) {
-            vector[i] = vector[i] + 2.0 *  0.9 * box_size;
+        else if (vector[i] < - 1.0 * box_size) {
+            vector[i] = vector[i] + 2.0 *  1.0 * box_size;
         }    
+    }*/
+    if (vector[2] > 0) {
+        vector[2] = vector[2] - far;
     }
+    if (vector[2] < -far) {
+        vector[2] = vector[2] + far;
+    }
+    var w = vector[2];
+    if (vector[0] > - 1.334 * w) { //1.334 = tan(103.6/2) 
+        vector[0] = vector[0] + 2 * w;
+    }
+    if (vector[0] < 1.334 * w) {
+        vector[0] = vector[0] - 2 * w;
+    }
+    if (vector[1] > - w) {
+        vector[1] = vector[1] +  w;
+    }
+    if (vector[1] < -10) {
+        vector[1] = vector[1] -  w + 10;
+    }   
     return vector;
 }
 

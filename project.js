@@ -9,6 +9,16 @@ var time_old = 0, next_sample_time = 0, sampleT = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition, _shininess, _lightNum;
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
+// ----- For Particals ----- //
+var triangleBuffer, triangle_vertex = [vec3(-1.5, 0.0,0.0), vec3(1.5, 0.0, 0.0), vec3(0.0, 2, 0.0)];
+var velocity = [];
+var speed = 2.5;
+var box_size = 200.0;
+var points = [];
+var true_location = [];
+var NumPoints = 250;
+var far, near;
+// ----- For Particalss ----- //
 
 
 var lights = [{
@@ -48,7 +58,7 @@ window.onload = function() {
     
     // Enable depth buffer
     gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LESS);
+    //gl.depthFunc(gl.LESS);
     gl.clearDepth(1.0);
     
     // Load shaders and initialize attribute buffers
@@ -89,7 +99,8 @@ window.onload = function() {
     groundBuffer = gl.createBuffer();
     geoBuffer = gl.createBuffer();
     normalBuffer = gl.createBuffer();
-
+    triangleBuffer = gl.createBuffer();
+    triangleNormalBuffer = gl.createBuffer();
     gl.enableVertexAttribArray(_vPosition);
     gl.enableVertexAttribArray(_normal);
     
@@ -110,7 +121,9 @@ function initialSetup() {
     geoNumber = 30;  // Total number of geometries
     
     camera = translate(0.0, -10, 0.0);
-    projection = perspective(40, 960./540, 0.01, groundSize);
+    projection = perspective(90, 960./540, 0.1, groundSize);
+    far = groundSize;
+    near = 0.1;
     inv_camera = inverse4(camera);
     inv_projection = inverse4(projection);
     ground = [- groundSize / 2, 0.0, 0.0,
@@ -120,6 +133,7 @@ function initialSetup() {
               groundSize / 2, 0.0, - groundSize,
               groundSize / 2, 0.0, 0.0,
               ];
+    setUpPoints();
     
 }
 
@@ -133,10 +147,25 @@ function animate(time) {
         else if (key.right)
             locations[i] = mult(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)),locations[i]);
     }
+    for (var i = 0; i < points.length; i++) {
+        points[i] = vec3(times(translate(0.0, 0.0, 0.001 * dt), vec4(points[i],1.0)));
+        if (key.left)
+            points[i] = vec3(times(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)), vec4(points[i],1.0)));
+        else if (key.right)
+            points[i] = vec3(times(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)), vec4(points[i],1.0)));
+    }
     if (next_sample_time < time) {
         next_sample_time += sampleT;
         analyzeAudio();
     }
+
+    updatVelocity(1.0, 100.0);
+    updatePointsLocation();
+    generateTrueLocation();
+
+
+
+
     render();
     window.requestAnimationFrame(animate);
 }
@@ -146,6 +175,11 @@ function render() {
     gl.uniformMatrix4fv(_projection, false, flatten(projection));
 
     // Draw ground
+    // --- borrowing normals for the ground, replace this by true normals
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false, 0, 0);
+    
     gl.bindBuffer(gl.ARRAY_BUFFER, groundBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(ground), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
@@ -183,6 +217,20 @@ function render() {
             gl.drawArrays(gl.TRIANGLES, 45*index[i], 45);
         }
     }
+
+
+
+    setModelViewAndNormalMatrix(translate(0.0, 0.0, 0.0));
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(triangle_vertex), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
+    for (var i = 0; i < NumPoints; i++)
+    {
+        modelView = translate(true_location[i]);
+        gl.uniformMatrix4fv(_modelView, false, flatten(modelView));
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
 
     // FIXME: @lihao http://en.wikipedia.org/wiki/Don%27t_repeat_yourself
     while (locations.length < geoNumber) {
@@ -365,6 +413,7 @@ function clickHandler(event) {
     clickLoc[2] = 10;
     clickLoc[3] = 1;
     // TODO: lights should vary
+    
     lights.push({
         position: clickLoc,
         ambient: vec4(0.2, 0.2, 0.2, 1.0),
