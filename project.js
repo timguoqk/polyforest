@@ -10,7 +10,6 @@ var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 
-
 var lights = [{
     position: vec4(10.0, 10.0, 10.0, 1.0),
     ambient: vec4(1.0, 1.0, 1.0, 1.0),
@@ -24,7 +23,7 @@ var materials = {
         ambient: vec4(0.5, 0.5, 0.5, 0.2),
         diffuse: vec4(0.5, 0.5, 0.5, 0.2),
         specular: vec4(0.0, 0.0, 0.0, 0.0),
-        shininess: 0.1
+        shininess: 0.01
     }
 };
 
@@ -92,10 +91,20 @@ window.onload = function() {
 
     gl.enableVertexAttribArray(_vPosition);
     gl.enableVertexAttribArray(_normal);
-    
+
+    $('#bgm-input').change(function() {  addBGM(this.files[0]);  });
+};
+
+var GLStarted = false;
+function startGL() {
+    if (GLStarted)
+        return;
+    GLStarted = true;
+
     // Set up audio
     var ctx = new AudioContext();
-    var audio = document.getElementById('bgm');
+    var audio = document.getElementById($('.bgm.menu>.active.item').attr('bgm-id'));
+    $('#bgm-column').fadeOut();
     var audioSrc = ctx.createMediaElementSource(audio);
     analyser = ctx.createAnalyser();  // This is global
     audioSrc.connect(analyser);
@@ -184,7 +193,6 @@ function render() {
         }
     }
 
-    // FIXME: @lihao http://en.wikipedia.org/wiki/Don%27t_repeat_yourself
     while (locations.length < geoNumber) {
         if (key.right == true) {
             var x = Math.random() * 0.5 * groundSize;
@@ -209,58 +217,8 @@ function render() {
             index.push(Math.floor(Math.random()/0.2));
         }
     }
-        //var coin = Math.random();
-        /*
-        var x = (Math.random() - 0.5) * 2;
-        var z = (Math.random() - 0.5) * 2;
-        var w = (Math.random()) * groundSize;
-        var clipped;
-        var world_coord;
-        if (key.right == true) {
-            clipped = vec4((1.0) * w, 0.0, z * w, w);
-            world_coord = times(inv_projection, clipped);
-            world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] + offset + Math.random();
-            locations.push(translate(vec3(world_coord)));
-            index.push(Math.floor(Math.random()/0.2));
-        }
-        if (key.left == true) {
-            clipped = vec4(-(1.0) * w, 0.0, z * w, w);
-            world_coord = times(inv_projection, clipped);
-            world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] - offset - Math.random();
-            locations.push(translate(vec3(world_coord)));
-            index.push(Math.floor(Math.random()/0.2));
-        }
-        if (coin < 0.2) {
-            clipped = vec4(x * w, 0.0, groundSize, groundSize);
-            world_coord = times(inv_projection, clipped);
-            world_coord[1] = 0.0;
-            locations.push(translate(vec3(world_coord)));
-            index.push(Math.floor(Math.random()/0.2));
-        }
-        else if (coin < 0.6) {
-            clipped = vec4((1.0) * w, 0.0, z * w, w);
-            world_coord = times(inv_projection, clipped);
-            world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] + offset + Math.random();
-            locations.push(translate(vec3(world_coord)));
-            index.push(Math.floor(Math.random()/0.2));
-        }
-        else {
-            clipped = vec4((- 1.0) * w, 0.0, z * w, w);
-            world_coord = times(inv_projection, clipped);
-            world_coord[1] = 0.0;
-            world_coord[0] = world_coord[0] - offset - Math.random();
-            locations.push(translate(vec3(world_coord)));
-            index.push(Math.floor(Math.random()/0.2));
-        }
-    }
-    */
 
-
-
-    // Lights decay, note that the first light is ambient and won't decay
+    // Lights decay, note that the first light won't decay
     for (var i = 1; i < lights.length; i ++) {
         lights[i].age ++;
         // TODO: decay in strength
@@ -286,7 +244,7 @@ function analyzeAudio() {
     f.push(total);
 
     frequencyHistory.push(f);
-    if (frequencyHistory.length > 5)
+    if (frequencyHistory.length > 50)
         frequencyHistory.shift();
     /*
         Mean: 7556.728101976377, Max: 10433, Pstdev: 1865.9577103153833
@@ -296,15 +254,25 @@ function analyzeAudio() {
         Mean: 2697.0495848438777, Max: 7369, Pstdev: 1928.8492120964333
         Mean: 21644.048298444628, Max: 38468, Pstdev: 8950.926632696443
     */
-    var frequency = frequencyHistory.reduce(function(prev, current) {
-        var res = [];
-        for (var i = 0; i < 6; i ++)
-            res.push((prev[i] + current[i]) / 2);
-        return res;
-    });
 
-    // Apply frequency to lights
-    lights[0].diffuse = vec4(frequency[4]/5000 + 0.1, frequency[4]/4000 + 0.1, frequency[4]/5200 + 0.1, 1.0);
+    // Stablize
+    var frequency = frequencyHistory[0];
+    for (var i = 1; i < frequencyHistory.length; i ++) {
+        for (var j = 0; j < frequency.length; j ++)
+            frequency[j] = (frequency[j] + frequencyHistory[i][j]) / 2;
+    }
+    
+    // Apply frequency to lights[0]
+    lights[0].diffuse = vec4(
+        frequency[4]/5000 + 0.1,
+        frequency[4]/4000 + 0.1,
+        frequency[4]/5200 + 0.1,
+        1.0);
+    lights[0].ambient = vec4(
+        frequency[5]/38468,
+        frequency[5]/38468,
+        frequency[5]/38468,
+        1.0);
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
@@ -385,7 +353,6 @@ function gyroscopeHandler(event) {
     for (var i = 1; i < alphaHistory.length; i ++)
         alpha = (alpha + alphaHistory[i])/2;
     var dalpha = alpha - alphaHistory[alphaHistory.length - 1];
-    console.log(dalpha);
     for (var i = 0; i < locations.length; i ++)
         locations[i] = mult(rotate(dalpha, [0, 1, 0]), locations[i]);
     for (var i = 0; i < lights.length; i ++)
@@ -415,6 +382,21 @@ function setUniformLights(material) {
     gl.uniform4fv(_specularProduct, flatten(sp));
     gl.uniform4fv(_lightPosition, flatten(po));
     gl.uniform1f(_shininess, material.shininess);
+}
+
+function setBGM(dom) {
+    $(dom).addClass('active').siblings().removeClass('active');
+}
+
+function addBGM(file) {
+    var reader = new FileReader();
+
+    reader.onload = function(event) {
+        the_url = event.target.result;
+        $('#audio-zone').append('<audio id="custom" src="' + the_url + '"></audio>');
+    }
+
+    reader.readAsDataURL(file);
 }
 
 /********  Utility  ********/

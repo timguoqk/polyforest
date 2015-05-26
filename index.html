@@ -3,6 +3,10 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 	<title>Team18-Term-Project</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.1/semantic.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.1/semantic.css">
+	<link rel="stylesheet" href="main.css">
 	<script id="vertex-shader" type="x-shader/x-vertex">
 		#define MAX_LIGHTS 10
 		precision mediump float;
@@ -74,9 +78,21 @@
 	<script type="text/javascript" src="project.js"></script>
 </head>
 <body>
-	<canvas id="gl-canvas" width="1024" height="576">
-		Oops ... your browser doesn't support the HTML5 canvas element
-	</canvas>
-	<audio id="bgm" src="Kid_A.mp3"></audio>
+	<div class="ui grid">
+		<div class="column">
+			<canvas id="gl-canvas" width="1024" height="576"></canvas>	
+		</div>
+		<div class="right floated left aligned four wide column" id="bgm-column">
+			<div class="ui primary button" onclick="startGL()">Start</div>
+			<div class="ui inverted secondary pointing bgm menu">
+				<div class="active item" onclick="setBGM(this)" bgm-id="kida">Kid A</div>
+				<div class="item" onclick="setBGM(this)" bgm-id="soma">Some other song</div>
+			</div>
+			<input id="bgm-input" type="file">
+		</div>
+	</div>
+	<div id="audio-zone">
+		<audio id="kida" src="Kid_A.mp3"></audio>
+	</div>
 </body>
 </html>
