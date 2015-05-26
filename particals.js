@@ -220,10 +220,10 @@ function moduleboxsize(vector) {
         vector[2] = vector[2] + far;
     }
     var w = vector[2];
-    if (vector[0] > - 1.334 * w) { //1.334 = tan(103.6/2) 
+    if (vector[0] > - 16.0 * w / 9) { //1.334 = tan(103.6/2) 
         vector[0] = vector[0] + 2 * w;
     }
-    if (vector[0] < 1.334 * w) {
+    if (vector[0] < 16.0 * w / 9) {
         vector[0] = vector[0] - 2 * w;
     }
     if (vector[1] > - w) {
