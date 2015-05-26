@@ -1,7 +1,7 @@
 var canvas;
 var gl;
 var groundSize, ground, groundBuffer;
-var geoNumber, geo = [], geoBuffer;
+var geoNumber, geo = [], geoBuffer, index = [];
 var normals = [], normalBuffer;
 var projection, inv_projection;
 var locations = [];  //locations of geometries
@@ -10,19 +10,7 @@ var _vPosition, _projection, _modelView, _normal; //handles
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 
-<<<<<<< HEAD
-=======
-var vertices = [
-    vec3(-0.5, 0.0, 0.0),
-    vec3(0.0, 0.0, 0.5),
-    vec3(0.5, 0.0, 0.0), 
-    vec3(0.0, 20.0, 0.0),
-    vec3(-0.1, 17.0, 0.0),
-    vec3(0.0, 17.0, 0.1),
-    vec3(0.0, 16.0, 0.0),
-    vec3(-1.7, 21.0, 1.4)
-];
->>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
+
 
 var lights = [{
     position: vec4(1.0, 1.0, 1.0, 0.0),
@@ -68,22 +56,13 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-<<<<<<< HEAD
-
-    
+ 
     drawTree(0.1, 0.1, -0.2, 0.2, -1.5, 0.8, 1.2, 0.7);
     drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 1.0, 1.1, 0.9);
     drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.9, 1.4, 0.8);
     drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
     drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
-=======
-    
-    drawTree(0.1, 0.1, 0.2, 0.2, 0.3, 0.1);
-    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 0.1);
-    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.3);
-    drawTree(0.5, -0.9, 0.2, -0.5, 0.4, 0.2);
-    drawTree(1.0, -0.2, 0.3, -0.5, 0.2, 0.5);    
->>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
+
 
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
@@ -104,6 +83,7 @@ window.onload = function() {
         var y = 0.0;
         var z = - Math.random() * groundSize;
         locations.push(translate(vec3(x, y, z)));
+        index.push(Math.floor(Math.random()/0.2));
     }
 
     // Create buffers
@@ -204,16 +184,14 @@ function render() {
         var y = pos[1] / pos[3];
         if (z > 1.0 || y > 1.0 || z > 1.0 ) {  //pop things behind the camera
             locations.splice(i, 1);
+            index.splice(i, 1);
             i = i - 1;
         } else {
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
-<<<<<<< HEAD
-            gl.drawArrays(gl.TRIANGLES, 45*(i%5), 45);
-=======
-            // var index = Math.floor(Math.random()/0.2);
-            var index = 3;
-            gl.drawArrays(gl.TRIANGLES, 45*index, 45);
->>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
+
+            gl.drawArrays(gl.TRIANGLES, 45*index[i], 45);
+
+
         }
     }
 
@@ -231,6 +209,7 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] + offset + Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         if (key.left == true) {
             clipped = vec4(-(1.0) * w, 0.0, z * w, w);
@@ -238,12 +217,14 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] - offset - Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         if (coin < 0.2) {
             clipped = vec4(x * w, 0.0, groundSize, groundSize);
             world_coord = times(inv_projection, clipped);
             world_coord[1] = 0.0;
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         else if (coin < 0.6) {
             clipped = vec4((1.0) * w, 0.0, z * w, w);
@@ -251,6 +232,7 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] + offset + Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
         else {
             clipped = vec4((- 1.0) * w, 0.0, z * w, w);
@@ -258,6 +240,7 @@ function render() {
             world_coord[1] = 0.0;
             world_coord[0] = world_coord[0] - offset - Math.random();
             locations.push(translate(vec3(world_coord)));
+            index.push(Math.floor(Math.random()/0.2));
         }
     }
 
@@ -300,11 +283,8 @@ function analyzeAudio() {
     lights[0].diffuse = vec4(frequency[4]/4000 + 0.1, frequency[4]/3000 + 0.1, frequency[4]/4200 + 0.1, 1.0);
 }
 
-<<<<<<< HEAD
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
-=======
-function drawTree(a, b, c, d, e, f) {
->>>>>>> 4067e4d36533df38814c85d3552d3ce0a8921c4c
+
     //var r1 = Math.random();
     //var a2 = 
     var points = [];
