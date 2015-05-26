@@ -10,11 +10,7 @@ var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 
-<<<<<<< HEAD
 
-
-=======
->>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
 var lights = [{
     position: vec4(10.0, 10.0, 10.0, 1.0),
     ambient: vec4(1.0, 1.0, 1.0, 1.0),
@@ -58,20 +54,13 @@ window.onload = function() {
     // Load shaders and initialize attribute buffers
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-<<<<<<< HEAD
- 
-=======
 
->>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
     drawTree(0.1, 0.1, -0.2, 0.2, -1.5, 0.8, 1.2, 0.7);
     drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 1.0, 1.1, 0.9);
     drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.9, 1.4, 0.8);
     drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
     drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
-<<<<<<< HEAD
 
-=======
->>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
 
     // Get handles
     _vPosition = gl.getAttribLocation(program, "vPosition");
@@ -190,16 +179,8 @@ function render() {
             index.splice(i, 1);
             i = i - 1;
         } else {
-<<<<<<< HEAD
             gl.uniformMatrix4fv(_modelView, false, flatten(mult(camera, locations[i])));
-
             gl.drawArrays(gl.TRIANGLES, 45*index[i], 45);
-
-
-=======
-            setModelViewAndNormalMatrix(mult(camera, locations[i]));
-            gl.drawArrays(gl.TRIANGLES, 0, 45);
->>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
         }
     }
 
@@ -326,12 +307,7 @@ function analyzeAudio() {
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
-<<<<<<< HEAD
 
-=======
->>>>>>> d88b5346f070e0249329cf34b93a0c733abf9c55
-    //var r1 = Math.random();
-    //var a2 = 
     var points = [];
     points.push( vec3(-0.5, 0, 0) );
     points.push( vec3(0.5, 0, 0) );
