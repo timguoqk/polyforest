@@ -13,6 +13,7 @@
 		attribute vec3 vPosition;
 		attribute vec3 normal;
 		varying vec3 N, L[MAX_LIGHTS], E;
+		varying vec3 pos;
 		uniform vec4 lightPosition[MAX_LIGHTS];
 		uniform mat4 projection;
 		uniform mat4 modelView;
@@ -20,14 +21,14 @@
 		void main() {
 			gl_Position = projection * modelView * vec4(vPosition, 1.);
 
-			vec3 pos = (modelView * vec4(vPosition, 1.)).xyz;
+			pos = (modelView * vec4(vPosition, 1.)).xyz;
 			E = -normalize(pos);
 			N = normalize(normalMatrix * normal);
 			for (int i = 0; i < MAX_LIGHTS; i ++) {
 				if (lightPosition[i].z == 0.0)
 					L[i] = normalize(lightPosition[i].xyz);
 				else
-					L[i] = normalize(lightPosition[i]).xyz - pos;
+					L[i] = normalize(lightPosition[i].xyz - pos);
 			}
 		}
 	</script>
@@ -39,6 +40,7 @@
 		uniform vec4 diffuseProduct[MAX_LIGHTS];
 		uniform vec4 specularProduct[MAX_LIGHTS];
 		varying vec3 N, L[MAX_LIGHTS], E;
+		varying vec3 pos;
 		uniform vec4 lightPosition[MAX_LIGHTS];
 		uniform int lightNum;
 		void main()
@@ -59,8 +61,8 @@
 				if (dot(L[i], N) < 0.0)
 					specular = vec4(0.0, 0.0, 0.0, 1.0);
 
-				float len = length(gl_FragCoord - lightPosition[i]);
-				float d = 0.000009 * len * len + 0.0005 * len;
+				float len = length(pos - lightPosition[i].xyz);
+				float d = 0.00009 * len * len + 0.005 * len;
 				
 				fColor += (ambientProduct[i] + diffuse + specular) / d;
 			}

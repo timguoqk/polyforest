@@ -10,19 +10,17 @@ var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 // ----- For Particles ----- //
-<<<<<<< HEAD
+
 var triangleBuffer;
 var triangle_vertex = [
-    vec3(-0.15, 0.085,0.0), 
-    vec3(0.15, 0.085, 0.0), 
-    vec3(0.0, -0.17, 0.0),
-    vec3(-0.15, -0.085,0.0), 
-    vec3(0.15, -0.085, 0.0), 
-    vec3(0.0, 0.17, 0.0)
+    vec3(-0.3, 0.17,0.0), 
+    vec3(0.3, 0.17, 0.0), 
+    vec3(0.0, -0.34, 0.0),
+    vec3(-0.3, -0.17,0.0), 
+    vec3(0.3, -0.17, 0.0), 
+    vec3(0.0, 0.34, 0.0)
     ];
-=======
-var triangleBuffer, triangle_vertex = [vec3(-1.0, 0.0,0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 1.5, 0.0)];
->>>>>>> b45c8318ff64826758d72543cbf7db66a3d9f632
+
 var velocity = [];
 var speed = 1.0;
 var box_size = 200.0;
@@ -33,9 +31,9 @@ var far, near;
 // ----- For Particles ----- //
 
 var lights = [{
-    position: vec4(10.0, 10.0, 10.0, 1.0),
-    ambient: vec4(1.0, 1.0, 1.0, 1.0),
-    diffuse: vec4(1.0, 1.0, 1.0, 1.0),
+    position: vec4(0.0, 1.0, 0.0, 0.0),
+    ambient: vec4(0.0, 0.0, 0.0, 1.0),
+    diffuse: vec4(0.0, 0.0, 0.0, 1.0),
     specular: vec4(0.0, 0.0, 0.0, 1.0),
     age: 0  // Lights will decay (except the global ambient light)
 }];
@@ -44,7 +42,7 @@ var materials = {
     ground: {
         ambient: vec4(0.5, 0.5, 0.5, 0.2),
         diffuse: vec4(0.5, 0.5, 0.5, 0.2),
-        specular: vec4(1.0, 1.0, 1.0, 1.0),
+        specular: vec4(0.0, 0.0, 0.0, 0.0),
         shininess: 0.01
     },
     tree: {
@@ -55,9 +53,9 @@ var materials = {
     },
     particle: {
         ambient: vec4(1.0, 1.0, 1.0, 1.0),
-        diffuse: vec4(0.5, 0.5, 0.5, 1.0),
-        specular: vec4(0.0, 0.0, 0.0, 0.0),
-        shininess: 0.001
+        diffuse: vec4(1.0, 1.0, 1.0, 1.0),
+        specular: vec4(1.0, 1.0, 1.0, 1.0),
+        shininess: 1
     }
 };
 
@@ -77,7 +75,7 @@ window.onload = function() {
     gl.viewport(0, 0, canvas.width, canvas.height);
     
     // Set clear color to be black
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.2, 0.2, 0.2, 1.0);
     
     // Enable depth buffer
     gl.enable(gl.DEPTH_TEST);
@@ -210,7 +208,7 @@ function render() {
     // Draw ground
     // --- borrowing normals for the ground, replace this by true normals
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten([0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0]), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false, 0, 0);
     
     gl.bindBuffer(gl.ARRAY_BUFFER, groundBuffer);
@@ -358,13 +356,13 @@ function drawTree(a, b, c, d, e, f, factor1, factor2) {
     points.push( vec3(-0.5, 0, 0) );
     points.push( vec3(0.5, 0, 0) );
     points.push( vec3(0, 0, 0.8) );
-    points.push( add(vec3(a,5.0*factor1,b),vec3(-0.3, 0, 0)) );
-    points.push( add(vec3(a,5.0*factor1,b),vec3(0.3, 0, 0)) );
-    points.push( add(vec3(a,5.0*factor1,b),vec3(0, 0, 0.5)) );
-    points.push( add(vec3(c,10.0*factor1,d),vec3(-0.15, 0, 0)) );
-    points.push( add(vec3(c,10.0*factor1,d),vec3(0.15, 0, 0)) );
-    points.push( add(vec3(c,10.0*factor1,d),vec3(0, 0, 0.25)) );
-    points.push( vec3(e,15*factor2,f) );
+    points.push( add(vec3(a,10.0*factor1,b),vec3(-0.3, 0, 0)) );
+    points.push( add(vec3(a,10.0*factor1,b),vec3(0.3, 0, 0)) );
+    points.push( add(vec3(a,10.0*factor1,b),vec3(0, 0, 0.5)) );
+    points.push( add(vec3(c,20.0*factor1,d),vec3(-0.15, 0, 0)) );
+    points.push( add(vec3(c,20.0*factor1,d),vec3(0.15, 0, 0)) );
+    points.push( add(vec3(c,20.0*factor1,d),vec3(0, 0, 0.25)) );
+    points.push( vec3(e,30*factor2,f) );
 
     var indices = [0,2,5,0,5,3,3,5,8,3,8,6,6,8,9,2,1,5,5,1,4,5,4,8,8,4,7,7,8,9,0,1,3,3,1,4,3,4,6,6,4,7,6,7,9];
     for ( var i = 0; i < indices.length; ++i ) 
