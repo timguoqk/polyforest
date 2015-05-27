@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-	<title>Team18-Term-Project</title>
+	<title>PolyForest</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.1/semantic.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.1/semantic.css">
@@ -62,8 +62,8 @@
 					specular = vec4(0.0, 0.0, 0.0, 1.0);
 
 				float len = length(pos - lightPosition[i].xyz);
-				float d = 0.000003 * len * len + 0.1;
-				//float d = 1.0;
+
+				float d = 0.00009 * len * len + 0.05 * len;
 				
 				fColor += (ambientProduct[i] + diffuse + specular) / d;
 			}
@@ -86,12 +86,34 @@
 			<canvas id="gl-canvas" width="1024" height="576"></canvas>	
 		</div>
 		<div class="right floated left aligned four wide column" id="bgm-column">
-			<div class="ui primary button" onclick="startGL()">Start</div>
-			<div class="ui inverted secondary pointing bgm menu">
-				<div class="active item" onclick="setBGM(this)" bgm-id="kida">Kid A</div>
-				<div class="item" onclick="setBGM(this)" bgm-id="soma">Some other song</div>
+			<div class="ui vertical bgm menu">
+				<div class="item">
+					<h1 id="title">Poly Forest</h1>
+				</div>
+				<div class="item">
+					<div class="ui primary button" onclick="startGL()">Start</div>
+				</div>
+				<div class="item">
+					Here's the description of the project.
+				</div>
+				<div class="header item">Select music</div>
+				<div class="active item" onclick="setBGM($(this))" bgm-id="kida">Kid A</div>
+				<div class="item" onclick="setBGM($(this))" bgm-id="soma">Some other song</div>
+				<div class="item" bgm-id="custom">
+					<div class="ui icon input">
+						<input id="bgm-input" type="file">
+						<i class="upload icon"></i>
+					</div>
+				</div>
+				<div class="header item">Select color theme</div>
+				<div class="active item">Bright</div>
+				<div class="item">Light</div>
+				<div class="item">Black & White</div>
+				<div class="header item">Effects</div>
+				<div class="item">Low</div>
+				<div class="item">High</div>
+				<div class="header item">Made by </div>
 			</div>
-			<input id="bgm-input" type="file">
 		</div>
 	</div>
 	<div id="audio-zone">
