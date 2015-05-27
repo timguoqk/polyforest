@@ -31,7 +31,7 @@ var far, near;
 // ----- For Particles ----- //
 
 var lights = [{
-    position: vec4(0.0, 1.0, 0.0, 1.0),
+    position: vec4(0.0, 0.0, 1.0, 0.0),
     ambient: vec4(0.0, 0.0, 0.0, 1.0),
     diffuse: vec4(0.0, 0.0, 0.0, 1.0),
     specular: vec4(0.0, 0.0, 0.0, 1.0),
@@ -251,7 +251,10 @@ function render() {
     }
 
     setUniformLights(materials.ground);
-
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleNormalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0]), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false, 0, 0);
+    
     setModelViewAndNormalMatrix(translate(0.0, 0.0, 0.0));
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(triangle_vertex), gl.STATIC_DRAW);
