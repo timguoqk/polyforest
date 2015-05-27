@@ -10,7 +10,15 @@ var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 // ----- For Particles ----- //
-var triangleBuffer, triangle_vertex = [vec3(-1.5, 0.0,0.0), vec3(1.5, 0.0, 0.0), vec3(0.0, 2, 0.0)];
+var triangleBuffer;
+var triangle_vertex = [
+    vec3(-0.15, 0.085,0.0), 
+    vec3(0.15, 0.085, 0.0), 
+    vec3(0.0, -0.17, 0.0),
+    vec3(-0.15, -0.085,0.0), 
+    vec3(0.15, -0.085, 0.0), 
+    vec3(0.0, 0.17, 0.0)
+    ];
 var velocity = [];
 var speed = 1.0;
 var box_size = 200.0;
@@ -251,7 +259,7 @@ function render() {
     {
         modelView = translate(true_location[i]);
         gl.uniformMatrix4fv(_modelView, false, flatten(modelView));
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
     while (locations.length < geoNumber) {
