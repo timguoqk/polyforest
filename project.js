@@ -316,14 +316,23 @@ function render() {
             continue;
         }
 
+        var faint = 0;
         for (var j = 0; j < 3; j++) {
+
             lights[i].ambient[j] = Math.max(0.0, lights[i].ambient[j] - 1 /
                 LIGHT_LIFE_EXPECTANCY);
             lights[i].diffuse[j] = Math.max(0.0, lights[i].diffuse[j] - 1 /
                 LIGHT_LIFE_EXPECTANCY);
             lights[i].specular[j] = Math.max(0.0, lights[i].specular[j] - 1 /
                 LIGHT_LIFE_EXPECTANCY);
+            if (lights[i].ambient[j] <= 0.0 && lights[i].diffuse[j] <= 0.0 && lights[i].specular[j] <= 0.0) {
+                faint += 1;
+            }
         }
+        if (faint == 3) {
+            lights.splice(i,1);
+        }
+
     }
 
     for (var i = 1; i < lights.length; i++)
