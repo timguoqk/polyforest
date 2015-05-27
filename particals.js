@@ -126,12 +126,12 @@ function updatVelocity(sepDist, detDist) {
             sepVel = (scale2(1.0/sepCounter, sepVel));
         }
         if (detCounter > 0 && length(cohVel > 0)) {
-            cohVel = (scale2(1.0/detCounter, cohVel));
+            cohVel = normalize(scale2(1.0/detCounter, cohVel));
         }
         if (detCounter > 0 && length(algVel > 0)) {
             algVel = (scale2(1.0/detCounter, algVel));
         }
-        var new_vel = add(add(scale2(3, algVel), cohVel), scale2(5.5, sepVel));
+        var new_vel = add(add(scale2(8.0, algVel), cohVel), scale2(5.5, sepVel));
         if (length(new_vel) > 0) {
             new_vel = normalize(new_vel);
         }
