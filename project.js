@@ -86,11 +86,11 @@ window.onload = function() {
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    drawTree(0.1, 0.1, -0.2, 0.2, -1.5, 0.8, 1.2, 0.7);
-    drawTree(-0.5, 0.5, -0.7, 1.0, -0.1, 1.0, 1.1, 0.9);
-    drawTree(-0.8, -0.1, -0.5, 0.2, -0.3, 0.9, 1.4, 0.8);
-    drawTree(0.5, -0.9, 0.2, -0.5, -0.4, 2.0, 1.5, 0.5);
-    drawTree(1.0, -0.2, 0.3, -0.5, -0.8, 0.5, 1.3, 1.3);    
+    drawTree(3, 5, -2, 4.2, -4.5, 3.8, 1.2, 0.7);
+    drawTree(-3.5, 2.5, -2.7, 4.0, -3.0, 2.0, 1.1, 0.9);
+    drawTree(-2.8, -3, -2.5, 5.2, -3.3, 0.9, 1.4, 0.8);
+    drawTree(2.5, -2.9, 5.2, -1.5, -2.4, 2.0, 1.5, 0.75);
+    drawTree(3.0, -3.2, 2.3, -3.5, -4.8, 0.5, 1.3, 1.3);    
 
 
     // Get handles
@@ -149,7 +149,7 @@ function startGL() {
 
 function initialSetup() {
     groundSize = 200.0;
-    geoNumber = 30;  // Total number of geometries
+    geoNumber = 60;  // Total number of geometries
     
     camera = translate(0.0, -10, 0.0);
 
@@ -233,7 +233,7 @@ function render() {
 
     setUniformLights(materials.tree);
 
-    var offset = 0.01; //decided by bounding volume
+    var offset = 5; //decided by bounding volume
     for (var i = 0; i < locations.length; i++) {
         //var index = Math.floor(Math.random()/0.2);
         var pos = find_clip_coord(locations[i], offset);
