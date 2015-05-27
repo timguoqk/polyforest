@@ -10,7 +10,7 @@ var _vPosition, _projection, _modelView, _normal, _normalMatrix, _ambientProduct
 var key = {left: false, right: false, up: false, down: false};
 var analyser, frequencyHistory = [];
 // ----- For Particles ----- //
-var triangleBuffer, triangle_vertex = [vec3(-1.5, 0.0,0.0), vec3(1.5, 0.0, 0.0), vec3(0.0, 2, 0.0)];
+var triangleBuffer, triangle_vertex = [vec3(-1.0, 0.0,0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 1.5, 0.0)];
 var velocity = [];
 var speed = 1.0;
 var box_size = 200.0;
@@ -283,15 +283,16 @@ function render() {
     for (var i = 1; i < lights.length; i ++) {
         lights[i].age ++;
         
-        if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
-            lights.splice(i, 1);
-        
         for (var j = 0; j < 3; j ++) {
             lights[i].ambient[j] = Math.max(0.0, lights[i].ambient[j] - 1/LIGHT_LIFE_EXPECTANCY);
             lights[i].diffuse[j] = Math.max(0.0, lights[i].diffuse[j] - 1/LIGHT_LIFE_EXPECTANCY);
             lights[i].specular[j] = Math.max(0.0, lights[i].specular[j] - 1/LIGHT_LIFE_EXPECTANCY);
         }
     }
+
+    for (var i = 1; i < lights.length; i ++)
+        if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
+            lights.splice(i, 1);
 }
 
 function analyzeAudio() {
