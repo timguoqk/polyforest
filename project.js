@@ -42,7 +42,7 @@ var materials = {
     ground: {
         ambient: vec4(0.5, 0.5, 0.5, 0.2),
         diffuse: vec4(0.5, 0.5, 0.5, 0.2),
-        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        specular: vec4(0.5, 0.5, 0.5, 0.2),
         shininess: 0.01
     },
     tree: {
@@ -404,21 +404,10 @@ function clickHandler(event) {
     if (lights.length == MAX_LIGHTS)
         return;
 
-    var clickLoc = vec4((event.clientX - 480) * 0.1 * (16.0 / 9)/ 960 , (event.clientY - 285) * 0.1  / 570, -0.1, 1);
-    //clickLoc = times(inv_projection, clickLoc);
-    //clickLoc = times(inv_camera, clickLoc);
-    //clickLoc[2] = 10;
-    //clickLoc[3] = 1;
-    console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
+    // var clickLoc = vec4((event.clientX - 480) * 0.1 * (16.0 / 9)/ 960 , (event.clientY - 285) * 0.1  / 570, -50, 1);
+    var clickLoc = vec4((event.clientX - 480) * 70 * (16.0 / 9)/ 960 , (event.clientY - 285) * 70 / 570, -50, 1);
+    // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
     
-    // lights.push({
-    //     position: clickLoc,
-    //     ambient: vec4(1.0, 1.0, 1.0, 1.0),
-    //     diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-    //     specular: vec4(1.0, 1.0, 1.0, 1.0),
-    //     age: 0
-    // });
-    // Experiment: use random color?
     var color = randomColor({luminosity: 'bright', format: 'rgba'});
     lights.push({
         position: clickLoc,
