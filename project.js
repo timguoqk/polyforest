@@ -72,11 +72,6 @@ var materials = {
 var MAX_LIGHTS = 10; // This should match the macro in GLSL!
 var LIGHT_LIFE_EXPECTANCY = 200;
 
-document.addEventListener('keydown', keyDownHandler);
-document.addEventListener('keyup', keyUpHandler);
-document.addEventListener('click', clickHandler);
-window.ondeviceorientation = gyroscopeHandler;
-
 window.onload = function() {
     var canvas = document.getElementById("gl-canvas");
     gl = WebGLUtils.setupWebGL(canvas);
@@ -134,9 +129,12 @@ window.onload = function() {
     gl.enableVertexAttribArray(_vPosition);
     gl.enableVertexAttribArray(_normal);
 
-    $('#bgm-input').change(function() {
-        addBGM(this.files[0]);
-    });
+    document.addEventListener('keydown', keyDownHandler);
+    document.addEventListener('keyup', keyUpHandler);
+    document.addEventListener('click', clickHandler);
+    window.ondeviceorientation = gyroscopeHandler;
+    document.getElementById('bgm-input').addEventListener('change', bgmInputHandler);
+    // $('#bgm-input').change(bgmInputHandler);
 };
 
 var GLStarted = false;
@@ -495,11 +493,11 @@ function setUniformLights(material) {
     gl.uniform1f(_shininess, material.shininess);
 }
 
-function setBGM(dom) {
-    $(dom).addClass('active').siblings().removeClass('active');
+function setBGM(item) {
+    item.addClass('active').siblings().removeClass('active');
 }
 
-function addBGM(file) {
+function bgmInputHandler() {
     var reader = new FileReader();
 
     reader.onload = function(event) {
@@ -507,8 +505,9 @@ function addBGM(file) {
         $('#audio-zone').append('<audio id="custom" src="' + the_url +
             '"></audio>');
     };
+    setBGM($('[bgm-id=custom]'));
 
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(this.files[0]);
 }
 
 /********  Utility  ********/

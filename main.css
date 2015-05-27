@@ -1,3 +1,7 @@
 body {
 	background-color: black;
 }
+
+#bgm-column>.menu {
+	margin-top: 20px;
+}
