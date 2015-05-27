@@ -36,7 +36,7 @@ var speed = 1.0;
 var box_size = 200.0;
 var points = [];
 var true_location = [];
-var NumPoints = 150;
+var NumPoints = 250;
 var far, near;
 // ----- For Particles ----- //
 
