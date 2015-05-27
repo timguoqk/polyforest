@@ -12,11 +12,11 @@ var analyser, frequencyHistory = [];
 // ----- For Particals ----- //
 var triangleBuffer, triangle_vertex = [vec3(-1.5, 0.0,0.0), vec3(1.5, 0.0, 0.0), vec3(0.0, 2, 0.0)];
 var velocity = [];
-var speed = 2.5;
+var speed = 0.7;
 var box_size = 200.0;
 var points = [];
 var true_location = [];
-var NumPoints = 250;
+var NumPoints = 150;
 var far, near;
 // ----- For Particalss ----- //
 
