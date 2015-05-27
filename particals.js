@@ -141,7 +141,7 @@ function updatVelocity(sepDist, detDist) {
         var diff = subtract(new_vel, velocity[i]);
         var diff_mag = length(diff);
         if (diff_mag > 0) {
-            diff = scale2(0.20/diff_mag, diff);
+            diff = scale2(0.1/diff_mag, diff);
         }
         velocity[i] = normalize(add(velocity[i] , diff));
     }
@@ -221,15 +221,15 @@ function moduleboxsize(vector) {
     }
     var w = vector[2];
     if (vector[0] > - 16.0 * w / 9) { //1.334 = tan(103.6/2) 
-        vector[0] = vector[0] + 2 * w;
+        vector[0] = vector[0] + 2 * 16.0 * w / 9;
     }
     if (vector[0] < 16.0 * w / 9) {
-        vector[0] = vector[0] - 2 * w;
+        vector[0] = vector[0] - 2 * 16.0 * w / 9;
     }
     if (vector[1] > - w) {
-        vector[1] = vector[1] +  w;
+        vector[1] = vector[1] +  w - 10;
     }
-    if (vector[1] < -10) {
+    if (vector[1] < - 10) {
         vector[1] = vector[1] -  w + 10;
     }   
     return vector;
