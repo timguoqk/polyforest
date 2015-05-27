@@ -32,9 +32,9 @@ var far, near;
 
 var lights = [{
     position: vec4(0.0, 0.0, 1.0, 0.0),
-    ambient: vec4(0.0, 0.0, 0.0, 1.0),
-    diffuse: vec4(0.0, 0.0, 0.0, 1.0),
-    specular: vec4(0.0, 0.0, 0.0, 1.0),
+    ambient: vec4(0.0, 0.0, 0.0, 0.0),
+    diffuse: vec4(0.0, 0.0, 0.0, 0.0),
+    specular: vec4(0.0, 0.0, 0.0, 0.0),
     age: 0  // Lights will decay (except the global ambient light)
 }];
 
@@ -343,13 +343,13 @@ function analyzeAudio() {
     }
     
     // Apply frequency to lights[0]
-    lights[0].diffuse[0] = frequency[4]/5000 + 0.1;
-    lights[0].diffuse[1] = frequency[4]/4000 + 0.1;
-    lights[0].diffuse[2] = frequency[4]/5200 + 0.1;
+    lights[0].diffuse[0] = frequency[4]/6000;
+    lights[0].diffuse[1] = frequency[4]/4500;
+    lights[0].diffuse[2] = frequency[4]/6200;
 
-    lights[0].ambient[0] = frequency[5]/38468;
+    lights[0].ambient[0] = frequency[5]/38468/2;
     lights[0].ambient[1] = frequency[5]/38468;
-    lights[0].ambient[2] = frequency[5]/38468;
+    lights[0].ambient[2] = frequency[5]/38468/3;
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
@@ -404,8 +404,7 @@ function clickHandler(event) {
     if (lights.length == MAX_LIGHTS)
         return;
 
-    // var clickLoc = vec4((event.clientX - 480) * 0.1 * (16.0 / 9)/ 960 , (event.clientY - 285) * 0.1  / 570, -50, 1);
-    var clickLoc = vec4((event.clientX - 480) * 70 * (16.0 / 9)/ 960 , (event.clientY - 285) * 70 / 570, -50, 1);
+    var clickLoc = vec4((event.clientX - 480) * 70 * (16.0 / 9)/ 960 , (285 - event.clientY) * 50 / 570 + 15, -50, 1);
     // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
     
     var color = randomColor({luminosity: 'bright', format: 'rgba'});
