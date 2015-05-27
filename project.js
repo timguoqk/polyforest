@@ -50,7 +50,7 @@ var materials = {
 };
 
 var MAX_LIGHTS = 10;  // This should match the macro in GLSL!
-var LIGHT_LIFE_EXPECTANCY = 100;
+var LIGHT_LIFE_EXPECTANCY = 200;
 
 document.addEventListener('keydown', keyDownHandler);
 document.addEventListener('keyup', keyUpHandler);
@@ -282,19 +282,15 @@ function render() {
     // Lights decay, note that the first light won't decay
     for (var i = 1; i < lights.length; i ++) {
         lights[i].age ++;
-        // TODO: decay in strength
-        lights[i].ambient[0] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].ambient[1] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].ambient[2] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].diffuse[0] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].diffuse[1] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].diffuse[2] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].specular[0] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].specular[1] -= 1/LIGHT_LIFE_EXPECTANCY;
-        lights[i].specular[2] -= 1/LIGHT_LIFE_EXPECTANCY;
-
+        
         if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
             lights.splice(i, 1);
+        
+        for (var j = 0; j < 3; j ++) {
+            lights[i].ambient[j] = Math.max(0.0, lights[i].ambient[j] - 1/LIGHT_LIFE_EXPECTANCY);
+            lights[i].diffuse[j] = Math.max(0.0, lights[i].diffuse[j] - 1/LIGHT_LIFE_EXPECTANCY);
+            lights[i].specular[j] = Math.max(0.0, lights[i].specular[j] - 1/LIGHT_LIFE_EXPECTANCY);
+        }
     }
 }
 
