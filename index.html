@@ -14,7 +14,7 @@
 		attribute vec3 normal;
 		varying vec3 N, L[MAX_LIGHTS], E;
 		varying float d[MAX_LIGHTS];
-		uniform int lightNum;
+		// uniform int lightNum;
 		uniform vec4 lightPosition[MAX_LIGHTS];
 		uniform mat4 projection;
 		uniform mat4 modelView;
@@ -31,29 +31,36 @@
 				else
 					L[i] = normalize(lightPosition[i]).xyz - pos;
 
-				if (i > lightNum)
-					d[i] = 1.0 / 0.0; // Inf
-				else {
-					float len = length(modelView * vec4(vPosition, 1.) - lightPosition[i]);
-					d[i] = 0.0005 * len * len + 0.001 * len;
-				}
+				// if (i > lightNum)
+				// 	d[i] = 1.0 / 0.0; // Inf
+				// else {
+				// 	float len = length(modelView * vec4(vPosition, 1.) - lightPosition[i]);
+				// 	d[i] = 0.00009 * len * len + 0.001 * len;
+				// }
 			}
 		}
 	</script>
 	<script id="fragment-shader" type="x-shader/x-fragment">
 		#define MAX_LIGHTS 10
 		precision mediump float;
+		// in vec4 gl_FragCoord;
 		uniform float shininess;
 		uniform vec4 ambientProduct[MAX_LIGHTS];
 		uniform vec4 diffuseProduct[MAX_LIGHTS];
 		uniform vec4 specularProduct[MAX_LIGHTS];
 		varying vec3 N, L[MAX_LIGHTS], E;
-		varying float d[MAX_LIGHTS];
-		
+		// varying float d[MAX_LIGHTS];
+		uniform vec4 lightPosition[MAX_LIGHTS];
+		uniform int lightNum;
 		void main()
 		{
 			vec4 fColor = vec4(0.0, 0.0, 0.0, 0.0);
+			float d;
 			for (int i = 0; i < MAX_LIGHTS; i ++) {
+				if (i > lightNum)
+					break;
+				float len = length(gl_FragCoord - lightPosition[i]);
+				d = 0.000009 * len * len + 0.0005 * len;
 				vec3 H = normalize(L[i] + E);
 
 				float Kd = max(dot(L[i], N), 0.0);
@@ -65,13 +72,15 @@
 				if (dot(L[i], N) < 0.0)
 					specular = vec4(0.0, 0.0, 0.0, 1.0);
 
-				fColor += (ambientProduct[i] + diffuse + specular) / d[i];
+				fColor += (ambientProduct[i] + diffuse + specular) / d;
 			}
 
 			fColor.a = 1.0;
 			gl_FragColor = fColor;
 		}
 	</script>
+	<script type="text/javascript" src="randomcolor.js"></script>
+
 	<script type="text/javascript" src="webgl-utils.js"></script>
 	<script type="text/javascript" src="initShaders.js"></script>
 	<script type="text/javascript" src="MV.js"></script>

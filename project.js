@@ -23,8 +23,8 @@ var far, near;
 var lights = [{
     position: vec4(10.0, 10.0, 10.0, 1.0),
     ambient: vec4(1.0, 1.0, 1.0, 1.0),
-    diffuse: vec4(1.0, 1.0, 1.0, 0.0),
-    specular: vec4(0.0, 0.0, 0.0, 0.0),
+    diffuse: vec4(1.0, 1.0, 1.0, 1.0),
+    specular: vec4(0.0, 0.0, 0.0, 1.0),
     age: 0  // Lights will decay (except the global ambient light)
 }];
 
@@ -32,13 +32,25 @@ var materials = {
     ground: {
         ambient: vec4(0.5, 0.5, 0.5, 0.2),
         diffuse: vec4(0.5, 0.5, 0.5, 0.2),
-        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        specular: vec4(1.0, 1.0, 1.0, 1.0),
         shininess: 0.01
+    },
+    tree: {
+        ambient: vec4(1.0, 1.0, 1.0, 1.0),
+        diffuse: vec4(0.5, 0.5, 0.5, 1.0),
+        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        shininess: 0.001
+    },
+    particle: {
+        ambient: vec4(1.0, 1.0, 1.0, 1.0),
+        diffuse: vec4(0.5, 0.5, 0.5, 1.0),
+        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        shininess: 0.001
     }
 };
 
 var MAX_LIGHTS = 10;  // This should match the macro in GLSL!
-var LIGHT_LIFE_EXPECTANCY = 500;
+var LIGHT_LIFE_EXPECTANCY = 50;
 
 document.addEventListener('keydown', keyDownHandler);
 document.addEventListener('keyup', keyUpHandler);
@@ -193,6 +205,8 @@ function render() {
     gl.bufferData(gl.ARRAY_BUFFER, flatten(ground), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
 
+    setUniformLights(materials.ground);
+
     setModelViewAndNormalMatrix(camera);
     
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -206,8 +220,8 @@ function render() {
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray( _vPosition );
-    // Set up light
-    setUniformLights(materials.ground);
+
+    setUniformLights(materials.tree);
 
     var offset = 0.01; //decided by bounding volume
     for (var i = 0; i < locations.length; i++) {
@@ -227,6 +241,8 @@ function render() {
         }
     }
 
+    setUniformLights(materials.ground);
+    
     setModelViewAndNormalMatrix(translate(0.0, 0.0, 0.0));
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(triangle_vertex), gl.STATIC_DRAW);
@@ -267,6 +283,16 @@ function render() {
     for (var i = 1; i < lights.length; i ++) {
         lights[i].age ++;
         // TODO: decay in strength
+        lights[i].ambient[0] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].ambient[1] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].ambient[2] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].diffuse[0] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].diffuse[1] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].diffuse[2] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].specular[0] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].specular[1] -= 1/LIGHT_LIFE_EXPECTANCY;
+        lights[i].specular[2] -= 1/LIGHT_LIFE_EXPECTANCY;
+
         if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
             lights.splice(i, 1);
     }
@@ -289,7 +315,7 @@ function analyzeAudio() {
     f.push(total);
 
     frequencyHistory.push(f);
-    if (frequencyHistory.length > 50)
+    if (frequencyHistory.length > 10)
         frequencyHistory.shift();
     /*
         Mean: 7556.728101976377, Max: 10433, Pstdev: 1865.9577103153833
@@ -308,16 +334,13 @@ function analyzeAudio() {
     }
     
     // Apply frequency to lights[0]
-    lights[0].diffuse = vec4(
-        frequency[4]/5000 + 0.1,
-        frequency[4]/4000 + 0.1,
-        frequency[4]/5200 + 0.1,
-        1.0);
-    lights[0].ambient = vec4(
-        frequency[5]/38468,
-        frequency[5]/38468,
-        frequency[5]/38468,
-        1.0);
+    lights[0].diffuse[0] = frequency[4]/5000 + 0.1;
+    lights[0].diffuse[1] = frequency[4]/4000 + 0.1;
+    lights[0].diffuse[2] = frequency[4]/5200 + 0.1;
+
+    lights[0].ambient[0] = frequency[5]/38468;
+    lights[0].ambient[1] = frequency[5]/38468;
+    lights[0].ambient[2] = frequency[5]/38468;
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
@@ -375,15 +398,25 @@ function clickHandler(event) {
     var clickLoc = vec4(event.clientX, event.clientY, 0, 1);
     clickLoc = times(inv_projection, clickLoc);
     clickLoc = times(inv_camera, clickLoc);
-    clickLoc[2] = 10;
+    // clickLoc[2] = 10;
     clickLoc[3] = 1;
+    console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
     // TODO: lights should vary
     
+    // lights.push({
+    //     position: clickLoc,
+    //     ambient: vec4(1.0, 1.0, 1.0, 1.0),
+    //     diffuse: vec4(1.0, 1.0, 1.0, 1.0),
+    //     specular: vec4(1.0, 1.0, 1.0, 1.0),
+    //     age: 0
+    // });
+    // Experiment: use random color?
+    var color = randomColor({luminosity: 'bright', format: 'rgba'});
     lights.push({
         position: clickLoc,
-        ambient: vec4(0.2, 0.2, 0.2, 1.0),
-        diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-        specular: vec4(1.0, 1.0, 1.0, 1.0),
+        ambient: color,
+        diffuse: color,
+        specular: color,
         age: 0
     });
 }
@@ -502,9 +535,8 @@ function setModelViewAndNormalMatrix(modelViewMatrix) {
     gl.uniformMatrix3fv(_normalMatrix, false, flatten(normalMatrix));
 }
 
-// From http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
-function shadeColor1(color, percent) {  
-    var num = parseInt(color.slice(1),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
-    return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+function hexColorToRGBA(hex) {
+    var num = parseInt(hex.slice(1),16);
+    var R = (num >> 16)/256, G = (num >> 8 & 0x00FF)/256, B = (num & 0x0000FF)/256;
+    return [R, G, B, 1.0];
 }
-
