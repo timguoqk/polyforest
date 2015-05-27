@@ -404,12 +404,12 @@ function clickHandler(event) {
     if (lights.length == MAX_LIGHTS)
         return;
 
-    var clickLoc = vec4(event.clientX, event.clientY, 0, 1);
-    clickLoc = times(inv_projection, clickLoc);
-    clickLoc = times(inv_camera, clickLoc);
-    clickLoc[2] = 10;
-    clickLoc[3] = 1;
-    // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
+    var clickLoc = vec4((event.clientX - 480) * 0.1 * (16.0 / 9)/ 960 , (event.clientY - 285) * 0.1  / 570, -0.1, 1);
+    //clickLoc = times(inv_projection, clickLoc);
+    //clickLoc = times(inv_camera, clickLoc);
+    //clickLoc[2] = 10;
+    //clickLoc[3] = 1;
+    console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
     
     // lights.push({
     //     position: clickLoc,
