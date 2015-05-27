@@ -50,7 +50,7 @@ var materials = {
 };
 
 var MAX_LIGHTS = 10;  // This should match the macro in GLSL!
-var LIGHT_LIFE_EXPECTANCY = 50;
+var LIGHT_LIFE_EXPECTANCY = 100;
 
 document.addEventListener('keydown', keyDownHandler);
 document.addEventListener('keyup', keyUpHandler);
@@ -242,7 +242,7 @@ function render() {
     }
 
     setUniformLights(materials.ground);
-    
+
     setModelViewAndNormalMatrix(translate(0.0, 0.0, 0.0));
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(triangle_vertex), gl.STATIC_DRAW);
