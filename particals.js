@@ -65,7 +65,7 @@ window.onload = function init()
 };
 
 function animate(time){
-    updatVelocity(1.0, 50.0);
+    updatVelocity(2.0, 50.0);
     updatePointsLocation();
     generateTrueLocation();
     render();
@@ -123,13 +123,13 @@ function updatVelocity(sepDist, detDist) {
             algVel = add(algVel, scale2(1.0/distance, velocity[j]));
         }
         if (sepCounter > 0 && length(sepVel > 0)) {
-            sepVel = normalize(scale2(1.0/sepCounter, sepVel));
+            sepVel = (scale2(1.0/sepCounter, sepVel));
         }
         if (detCounter > 0 && length(cohVel > 0)) {
-            cohVel = normalize(scale2(1.0/detCounter, cohVel));
+            cohVel = (scale2(1.0/detCounter, cohVel));
         }
         if (detCounter > 0 && length(algVel > 0)) {
-            algVel = normalize(scale2(1.0/detCounter, algVel));
+            algVel = (scale2(1.0/detCounter, algVel));
         }
         var new_vel = add(add(scale2(3, algVel), cohVel), scale2(5.5, sepVel));
         if (length(new_vel) > 0) {
@@ -141,9 +141,15 @@ function updatVelocity(sepDist, detDist) {
         var diff = subtract(new_vel, velocity[i]);
         var diff_mag = length(diff);
         if (diff_mag > 0) {
-            diff = scale2(0.1/diff_mag, diff);
+            diff = scale2(0.04/diff_mag, diff);
         }
-        velocity[i] = normalize(add(velocity[i] , diff));
+        new_vel = add(velocity[i], diff);
+        if (length(new_vel) > 1.0) {
+            velocity[i] = normalize(new_vel);
+        }
+        else {
+            velocity[i] = new_vel;
+        }
     }
 
 }
@@ -174,7 +180,7 @@ function setUpPoints() {
         var x = Math.cos(theta) * Math.cos(phi);
         var y = Math.sin(theta) * Math.cos(phi);
         var z = Math.sin(phi);
-        points.push(vec3(x , y , z - 100.0));
+        points.push(vec3(x , y + 0.5 , z - 50.0));
         velocity.push(add(vec3(x,y,z), vec3(0.0, 0.0, 0.0)));
         true_location.push(vec3(times(camera,vec4(x,y,z, 1.0))));
     }
@@ -213,11 +219,11 @@ function moduleboxsize(vector) {
             vector[i] = vector[i] + 2.0 *  1.0 * box_size;
         }    
     }*/
-    if (vector[2] > 0) {
-        vector[2] = vector[2] - far;
+    if (vector[2] > 1) {
+        vector[2] = vector[2] - far + 1;
     }
-    if (vector[2] < -far) {
-        vector[2] = vector[2] + far;
+    if (vector[2] < - far) {
+        vector[2] = vector[2] + far - 1;
     }
     var w = vector[2];
     if (vector[0] > - 16.0 * w / 9) { //1.334 = tan(103.6/2) 

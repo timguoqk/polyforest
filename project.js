@@ -429,8 +429,8 @@ function clickHandler(event) {
     if (lights.length == MAX_LIGHTS)
         return;
 
-    var clickLoc = vec4((event.clientX - 480) * 70 * (16.0 / 9) / 960, (285 -
-        event.clientY) * 50 / 570 + 15, -50, 1);
+    var clickLoc = vec4((event.clientX - 480) * 100 * (16.0 / 9) / 960, (285 -
+        event.clientY) * 100 / 570, -50, 1);
     // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
 
     var color = randomColor({
