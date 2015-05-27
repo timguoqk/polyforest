@@ -237,7 +237,6 @@ function render() {
     for (var i = 0; i < locations.length; i++) {
         //var index = Math.floor(Math.random()/0.2);
         var pos = find_clip_coord(locations[i], offset);
-        //console.log(pos);
         var z = pos[2] / pos[3];
         var x = pos[0] / pos[3];
         var y = pos[1] / pos[3];
@@ -408,10 +407,9 @@ function clickHandler(event) {
     var clickLoc = vec4(event.clientX, event.clientY, 0, 1);
     clickLoc = times(inv_projection, clickLoc);
     clickLoc = times(inv_camera, clickLoc);
-    // clickLoc[2] = 10;
+    clickLoc[2] = 10;
     clickLoc[3] = 1;
-    console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
-    // TODO: lights should vary
+    // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
     
     // lights.push({
     //     position: clickLoc,

@@ -62,7 +62,8 @@
 					specular = vec4(0.0, 0.0, 0.0, 1.0);
 
 				float len = length(pos - lightPosition[i].xyz);
-				float d = 0.00009 * len * len + 0.005 * len;
+				// float d = 0.00009 * len * len + 0.05 * len;
+				float d = 1.0;
 				
 				fColor += (ambientProduct[i] + diffuse + specular) / d;
 			}
