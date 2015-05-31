@@ -140,9 +140,10 @@ function startGL() {
         program = initShaders(gl, "vertex-shaderH", "fragment-shaderH")
         gl.useProgram(program);
     }
-    else {  // TODO: L version
-        MAX_LIGHTS = 10;
-        program = initShaders(gl, "vertex-shaderH", "fragment-shaderH")
+    else {
+        MAX_LIGHTS = 3;
+        NumPoints = 20;
+        program = initShaders(gl, "vertex-shaderL", "fragment-shaderL")
         gl.useProgram(program);   
     }
 
@@ -172,7 +173,7 @@ function startGL() {
     var ctx = new AudioContext();
     var audio = document.getElementById($('.menu>.active.item.bgm').attr(
         'bgm-id'));
-    $('#bgm-column').fadeOut();
+    $('#options-column').fadeOut();
     var audioSrc = ctx.createMediaElementSource(audio);
     analyser = ctx.createAnalyser(); // This is global
     audioSrc.connect(analyser);
@@ -392,6 +393,8 @@ function analyzeAudio() {
     lights[0].specular[0] = frequency[0] / 7556;
     lights[0].specular[1] = frequency[0] / 7556 / 2;
     lights[0].specular[2] = frequency[0] / 7556 / 1.5;
+
+    speed = frequency[5] / 21644;
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
