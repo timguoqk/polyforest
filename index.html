@@ -73,7 +73,7 @@
 		}
 	</script>
 	<script id="vertex-shaderL" type="x-shader/x-vertex">
-		#define MAX_LIGHTS 3
+		#define MAX_LIGHTS 5
 		precision mediump float;
 		attribute vec3 vPosition;
 		attribute vec3 normal;
@@ -98,7 +98,7 @@
 		}
 	</script>
 	<script id="fragment-shaderL" type="x-shader/x-fragment">
-		#define MAX_LIGHTS 3
+		#define MAX_LIGHTS 5
 		precision mediump float;
 		uniform float shininess;
 		uniform vec4 ambientProduct[MAX_LIGHTS];
@@ -176,7 +176,7 @@
 				<div class="item color"  onclick="setColor($(this))" color-id="dark">Dark</div>
 				<div class="header item">Effects</div>
 				<div class="active item effects"  onclick="setEffects($(this))" effects-id="high">High</div>
-				<div class="item effects"  onclick="setEffects($(this))" effects-id="low">Low</div>
+				<div class="item effects"  onclick="setEffects($(this))" effects-id="low">Low (for iPhone)</div>
 				<div class="header item">For Spring 15 CS 174A.</div>
 			</div>
 		</div>

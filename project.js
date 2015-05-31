@@ -135,13 +135,13 @@ function startGL() {
 
     // Load shaders and initialize attribute buffers
     var program;
-    if ($('.menu>.active.item.effects').attr('effects-id')) {
+    if ($('.menu>.active.item.effects').attr('effects-id') == 'high') {
         MAX_LIGHTS = 10;
         program = initShaders(gl, "vertex-shaderH", "fragment-shaderH")
         gl.useProgram(program);
     }
     else {
-        MAX_LIGHTS = 3;
+        MAX_LIGHTS = 5;
         NumPoints = 20;
         program = initShaders(gl, "vertex-shaderL", "fragment-shaderL")
         gl.useProgram(program);   
@@ -170,18 +170,23 @@ function startGL() {
     gl.enableVertexAttribArray(_normal);
 
     // Set up audio
-    var ctx = new AudioContext();
-    var audio = document.getElementById($('.menu>.active.item.bgm').attr(
-        'bgm-id'));
-    $('#options-column').fadeOut();
-    var audioSrc = ctx.createMediaElementSource(audio);
-    analyser = ctx.createAnalyser(); // This is global
-    audioSrc.connect(analyser);
-    audioSrc.connect(ctx.destination);
-    audio.play();
+    try {
+        var ctx = new AudioContext();
+        var audio = document.getElementById($('.menu>.active.item.bgm').attr(
+            'bgm-id'));
+        var audioSrc = ctx.createMediaElementSource(audio);
+        analyser = ctx.createAnalyser(); // This is global
+        audioSrc.connect(analyser);
+        audioSrc.connect(ctx.destination);
+        audio.play();
+    }
+    catch (e) {
+        alert("AudioAPI not supported!");
+    }
 
     colorTheme = $('.menu>.active.item.color').attr('color-id');
 
+    $('#options-column').fadeOut();
     animate(0);
 }
 
@@ -348,6 +353,9 @@ function render() {
 }
 
 function analyzeAudio() {
+    if (!analyser)
+        return;
+
     var frequencyData = new Uint8Array(analyser.frequencyBinCount);
     analyser.getByteFrequencyData(frequencyData);
 
