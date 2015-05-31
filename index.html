@@ -7,7 +7,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.1/semantic.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.12.1/semantic.css">
 	<link rel="stylesheet" href="main.css">
-	<script id="vertex-shader" type="x-shader/x-vertex">
+	<script id="vertex-shaderH" type="x-shader/x-vertex">
 		#define MAX_LIGHTS 10
 		precision mediump float;
 		attribute vec3 vPosition;
@@ -32,7 +32,7 @@
 			}
 		}
 	</script>
-	<script id="fragment-shader" type="x-shader/x-fragment">
+	<script id="fragment-shaderH" type="x-shader/x-fragment">
 		#define MAX_LIGHTS 10
 		precision mediump float;
 		uniform float shininess;
@@ -85,8 +85,8 @@
 		<div class="column">
 			<canvas id="gl-canvas" width="1024" height="576"></canvas>	
 		</div>
-		<div class="right floated left aligned four wide column" id="bgm-column">
-			<div class="ui vertical bgm menu">
+		<div class="right floated left aligned four wide column" id="options-column">
+			<div class="ui vertical menu">
 				<div class="item">
 					<h1 id="title">Poly Forest</h1>
 				</div>
@@ -97,22 +97,22 @@
 					Here's the description of the project.
 				</div>
 				<div class="header item">Select music</div>
-				<div class="active item" onclick="setBGM($(this))" bgm-id="kida">Kid A</div>
-				<div class="item" onclick="setBGM($(this))" bgm-id="soma">Some other song</div>
-				<div class="item" bgm-id="custom">
+				<div class="active item bgm" onclick="setBGM($(this))" bgm-id="kida">Kid A</div>
+				<div class="item bgm" onclick="setBGM($(this))" bgm-id="soma">Some other song</div>
+				<div class="item bgm" bgm-id="custom">
 					<div class="ui icon input">
 						<input id="bgm-input" type="file">
 						<i class="upload icon"></i>
 					</div>
 				</div>
 				<div class="header item">Select color theme</div>
-				<div class="active item">Bright</div>
-				<div class="item">Light</div>
-				<div class="item">Black & White</div>
+				<div class="active item color"  onclick="setColor($(this))" color-id="bright">Bright</div>
+				<div class="item color"  onclick="setColor($(this))" color-id="light">Light</div>
+				<div class="item color"  onclick="setColor($(this))" color-id="dark">Dark</div>
 				<div class="header item">Effects</div>
-				<div class="item">Low</div>
-				<div class="item">High</div>
-				<div class="header item">Made by </div>
+				<div class="active item effects"  onclick="setEffects($(this))" effects-id="high">High</div>
+				<div class="item effects"  onclick="setEffects($(this))" effects-id="low">Low</div>
+				<div class="header item">For Spring 15 CS 174A.</div>
 			</div>
 		</div>
 	</div>

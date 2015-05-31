@@ -8,7 +8,9 @@ var projection, inv_projection, camera, inv_camera;
 var locations = []; //locations of geometries
 var time_old = 0,
     next_sample_time = 0,
-    sampleT = 1;
+    sampleT = 1,
+    analyser,
+    frequencyHistory = [];
 var _vPosition, _projection, _modelView, _normal, _normalMatrix,
     _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition,
     _shininess, _lightNum;
@@ -18,7 +20,9 @@ var key = {
     up: false,
     down: false
 };
-var analyser, frequencyHistory = [];
+var colorTheme,
+    MAX_LIGHTS; // This should match the macro in GLSL!
+var LIGHT_LIFE_EXPECTANCY = 200;
 // ----- For Particles ----- //
 
 var triangleBuffer;
@@ -69,9 +73,6 @@ var materials = {
     }
 };
 
-var MAX_LIGHTS = 10; // This should match the macro in GLSL!
-var LIGHT_LIFE_EXPECTANCY = 200;
-
 window.onload = function() {
     var canvas = document.getElementById("gl-canvas");
     gl = WebGLUtils.setupWebGL(canvas);
@@ -87,78 +88,12 @@ window.onload = function() {
     //gl.depthFunc(gl.LESS);
     gl.clearDepth(1.0);
 
-    // Load shaders and initialize attribute buffers
-    var program = initShaders(gl, "vertex-shader", "fragment-shader");
-    gl.useProgram(program);
-
     drawTree(3, 5, -2, 4.2, -4.5, 3.8, 1.2, 0.7);
     drawTree(-3.5, 2.5, -2.7, 4.0, -3.0, 2.0, 1.1, 0.9);
     drawTree(-2.8, -3, -2.5, 5.2, -3.3, 0.9, 1.4, 0.8);
     drawTree(2.5, -2.9, 5.2, -1.5, -2.4, 2.0, 1.5, 0.75);
     drawTree(3.0, -3.2, 2.3, -3.5, -4.8, 0.5, 1.3, 1.3);
 
-    // Get handles
-    _vPosition = gl.getAttribLocation(program, "vPosition");
-    _projection = gl.getUniformLocation(program, "projection");
-    _modelView = gl.getUniformLocation(program, "modelView");
-    _normal = gl.getAttribLocation(program, "normal");
-    _normalMatrix = gl.getUniformLocation(program, "normalMatrix");
-    _ambientProduct = gl.getUniformLocation(program, "ambientProduct");
-    _diffuseProduct = gl.getUniformLocation(program, "diffuseProduct");
-    _specularProduct = gl.getUniformLocation(program, "specularProduct");
-    _lightPosition = gl.getUniformLocation(program, "lightPosition");
-    _shininess = gl.getUniformLocation(program, "shininess");
-    _lightNum = gl.getUniformLocation(program, "lightNum");
-
-    initialSetup();
-
-    for (var i = 0; i < geoNumber; i++) {
-        var x = (Math.random() - 0.5) * groundSize;
-        var y = 0.0;
-        var z = -Math.random() * groundSize;
-        locations.push(translate(vec3(x, y, z)));
-        index.push(Math.floor(Math.random() / 0.2));
-    }
-
-    // Create buffers
-    groundBuffer = gl.createBuffer();
-    geoBuffer = gl.createBuffer();
-    normalBuffer = gl.createBuffer();
-    triangleBuffer = gl.createBuffer();
-    triangleNormalBuffer = gl.createBuffer();
-    gl.enableVertexAttribArray(_vPosition);
-    gl.enableVertexAttribArray(_normal);
-
-    document.addEventListener('keydown', keyDownHandler);
-    document.addEventListener('keyup', keyUpHandler);
-    document.addEventListener('click', clickHandler);
-    window.ondeviceorientation = gyroscopeHandler;
-    document.getElementById('bgm-input').addEventListener('change', bgmInputHandler);
-    // $('#bgm-input').change(bgmInputHandler);
-};
-
-var GLStarted = false;
-
-function startGL() {
-    if (GLStarted)
-        return;
-    GLStarted = true;
-
-    // Set up audio
-    var ctx = new AudioContext();
-    var audio = document.getElementById($('.bgm.menu>.active.item').attr(
-        'bgm-id'));
-    $('#bgm-column').fadeOut();
-    var audioSrc = ctx.createMediaElementSource(audio);
-    analyser = ctx.createAnalyser(); // This is global
-    audioSrc.connect(analyser);
-    audioSrc.connect(ctx.destination);
-    audio.play();
-
-    animate(0);
-}
-
-function initialSetup() {
     groundSize = 200.0;
     geoNumber = 60; // Total number of geometries
 
@@ -176,6 +111,77 @@ function initialSetup() {
     ];
     setUpPoints();
 
+    for (var i = 0; i < geoNumber; i++) {
+        var x = (Math.random() - 0.5) * groundSize;
+        var y = 0.0;
+        var z = -Math.random() * groundSize;
+        locations.push(translate(vec3(x, y, z)));
+        index.push(Math.floor(Math.random() / 0.2));
+    }
+
+    document.addEventListener('keydown', keyDownHandler);
+    document.addEventListener('keyup', keyUpHandler);
+    document.addEventListener('click', clickHandler);
+    window.ondeviceorientation = gyroscopeHandler;
+    document.getElementById('bgm-input').addEventListener('change', bgmInputHandler);
+};
+
+var GLStarted = false;
+
+function startGL() {
+    if (GLStarted)
+        return;
+    GLStarted = true;
+
+    // Load shaders and initialize attribute buffers
+    var program;
+    if ($('.menu>.active.item.effects').attr('effects-id')) {
+        MAX_LIGHTS = 10;
+        program = initShaders(gl, "vertex-shaderH", "fragment-shaderH")
+        gl.useProgram(program);
+    }
+    else {  // TODO: L version
+        MAX_LIGHTS = 10;
+        program = initShaders(gl, "vertex-shaderH", "fragment-shaderH")
+        gl.useProgram(program);   
+    }
+
+    // Get handles
+    _vPosition = gl.getAttribLocation(program, "vPosition");
+    _projection = gl.getUniformLocation(program, "projection");
+    _modelView = gl.getUniformLocation(program, "modelView");
+    _normal = gl.getAttribLocation(program, "normal");
+    _normalMatrix = gl.getUniformLocation(program, "normalMatrix");
+    _ambientProduct = gl.getUniformLocation(program, "ambientProduct");
+    _diffuseProduct = gl.getUniformLocation(program, "diffuseProduct");
+    _specularProduct = gl.getUniformLocation(program, "specularProduct");
+    _lightPosition = gl.getUniformLocation(program, "lightPosition");
+    _shininess = gl.getUniformLocation(program, "shininess");
+    _lightNum = gl.getUniformLocation(program, "lightNum");
+
+    // Create buffers
+    groundBuffer = gl.createBuffer();
+    geoBuffer = gl.createBuffer();
+    normalBuffer = gl.createBuffer();
+    triangleBuffer = gl.createBuffer();
+    triangleNormalBuffer = gl.createBuffer();
+    gl.enableVertexAttribArray(_vPosition);
+    gl.enableVertexAttribArray(_normal);
+
+    // Set up audio
+    var ctx = new AudioContext();
+    var audio = document.getElementById($('.menu>.active.item.bgm').attr(
+        'bgm-id'));
+    $('#bgm-column').fadeOut();
+    var audioSrc = ctx.createMediaElementSource(audio);
+    analyser = ctx.createAnalyser(); // This is global
+    audioSrc.connect(analyser);
+    audioSrc.connect(ctx.destination);
+    audio.play();
+
+    colorTheme = $('.menu>.active.item.color').attr('color-id');
+
+    animate(0);
 }
 
 function animate(time) {
@@ -382,6 +388,10 @@ function analyzeAudio() {
     lights[0].ambient[0] = frequency[5] / 38468 / 2;
     lights[0].ambient[1] = frequency[5] / 38468;
     lights[0].ambient[2] = frequency[5] / 38468 / 3;
+
+    lights[0].specular[0] = frequency[0] / 7556;
+    lights[0].specular[1] = frequency[0] / 7556 / 2;
+    lights[0].specular[2] = frequency[0] / 7556 / 1.5;
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
@@ -443,7 +453,7 @@ function clickHandler(event) {
     // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
 
     var color = randomColor({
-        luminosity: 'bright',
+        luminosity: colorTheme,
         format: 'rgba'
     });
 
@@ -503,7 +513,18 @@ function setUniformLights(material) {
 }
 
 function setBGM(item) {
-    item.addClass('active').siblings().removeClass('active');
+    $('.item.bgm').removeClass('active');
+    item.addClass('active');
+}
+
+function setColor(item) {
+    $('.item.color').removeClass('active');
+    item.addClass('active');
+}
+
+function setEffects(item) {
+    $('.item.effects').removeClass('active');
+    item.addClass('active');
 }
 
 function bgmInputHandler() {
