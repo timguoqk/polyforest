@@ -1,9 +1,11 @@
 var gl;
-var groundSize, ground, groundBuffer;
+var groundSize, ground = [], groundBuffer;
 var geoNumber, geo = [],
     geoBuffer, index = [];
 var normals = [],
     normalBuffer;
+var textures = [], images = [];
+var texCoordsArray = [], texCoordsBuffer, texTransform;
 var projection, inv_projection, camera, inv_camera;
 var locations = []; //locations of geometries
 var time_old = 0,
@@ -14,7 +16,7 @@ var time_old = 0,
     moveSpeed = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix,
     _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition,
-    _shininess, _lightNum;
+    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _texTransform;
 var key = {
     left: false,
     right: false,
@@ -103,13 +105,11 @@ window.onload = function() {
     projection = perspective(90, 960.0 / 540, 0.1, groundSize);
     inv_camera = inverseCamera(camera);
     inv_projection = inverseProjection(projection);
+    texTransform = mat4();
 
-    ground = [-groundSize / 2, 0.0, 0.0,
-        groundSize / 2, 0.0, 0.0, -groundSize / 2, 0.0, -groundSize, -
-        groundSize / 2, 0.0, -groundSize,
-        groundSize / 2, 0.0, -groundSize,
-        groundSize / 2, 0.0, 0.0,
-    ];
+    drawGround();
+    configureTexture();
+
     setUpPoints();
 
     for (var i = 0; i < geoNumber; i++) {
@@ -161,6 +161,11 @@ function startGL() {
     _lightPosition = gl.getUniformLocation(program, "lightPosition");
     _shininess = gl.getUniformLocation(program, "shininess");
     _lightNum = gl.getUniformLocation(program, "lightNum");
+    _vTexCoord = gl.getAttribLocation(program, "vTexCoord");
+    _hTexture = gl.getUniformLocation(program, "hTexture");
+    _nTexture = gl.getUniformLocation(program, "nTexture");
+    _enableTex = gl.getUniformLocation(program, "enableTex");
+    _texTransform = gl.getUniformLocation(program, "texTransform");
 
     // Create buffers
     groundBuffer = gl.createBuffer();
@@ -168,8 +173,10 @@ function startGL() {
     normalBuffer = gl.createBuffer();
     triangleBuffer = gl.createBuffer();
     triangleNormalBuffer = gl.createBuffer();
+    texCoordsBuffer = gl.createBuffer();
     gl.enableVertexAttribArray(_vPosition);
     gl.enableVertexAttribArray(_normal);
+    gl.enableVertexAttribArray(_vTexCoord);
 
     // Set up audio
     try {
@@ -224,6 +231,13 @@ function animate(time) {
         analyzeAudio();
     }
 
+    // TODO: adjust parameters!!!!!!!!!!!!!!
+    texTransform = mult(translate(0.0, 0.0, -0.002 / groundSize * dt), texTransform);
+    if (key.left)
+        texTransform = mult(texTransform, rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)));
+    else if (key.right)
+        texTransform = mult(texTransform, rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)));
+
     updatVelocity(1.0, 100.0);
     updatePointsLocation();
     generateTrueLocation();
@@ -237,23 +251,35 @@ function render() {
     gl.uniformMatrix4fv(_projection, false, flatten(projection));
 
     // Draw ground
-    // --- borrowing normals for the ground, replace this by true normals
-    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten([0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-        0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-        0.0
-    ]), gl.STATIC_DRAW);
-    gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordsBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(_vTexCoord, 2, gl.FLOAT, false, 0, 0 );
 
     gl.bindBuffer(gl.ARRAY_BUFFER, groundBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(ground), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
 
+    // bind heightmap
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+    // bind normalmap
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+
+    gl.uniform1i(_hTexture, 0);
+    gl.uniform1i(_nTexture, 1);
+
+    gl.uniformMatrix4fv(_texTransform, false, flatten(mult(camera, texTransform)));
+
+    gl.uniform1i(_enableTex, 1);    // enable texture
+    gl.enableVertexAttribArray(_vTexCoord);
+    gl.disableVertexAttribArray(_normal);
+
     setUniformLights(materials.ground);
 
     setModelViewAndNormalMatrix(camera);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.drawArrays(gl.TRIANGLES, 0, ground.length);
 
     // Draw geometries
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
@@ -264,6 +290,10 @@ function render() {
     gl.bufferData(gl.ARRAY_BUFFER, flatten(geo), gl.STATIC_DRAW);
     gl.vertexAttribPointer(_vPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(_vPosition);
+
+    gl.uniform1i(_enableTex, 0);    // disable texture
+    gl.disableVertexAttribArray(_vTexCoord);
+    gl.enableVertexAttribArray(_normal);
 
     setUniformLights(materials.tree);
 
@@ -437,7 +467,56 @@ function drawTree(a, b, c, d, e, f, factor1, factor2) {
     }
 }
 
+function drawGround() {
+    var gg = 10.0;
+    var tt = gg * 2 / groundSize;
+    for (var ig = -groundSize, it = 0.5 ; ig < groundSize; ig += gg, it -= tt)
+        for (var jg = -groundSize, jt = 0; jg < 0; jg += gg, jt += tt) {
+            ground.push(vec3(ig, 0, jg));
+            ground.push(vec3(ig+gg, 0, jg));
+            ground.push(vec3(ig+gg, 0, jg+gg));
+            ground.push(vec3(ig+gg, 0, jg+gg));
+            ground.push(vec3(ig, 0, jg+gg));
+            ground.push(vec3(ig, 0, jg));
 
+            texCoordsArray.push(vec2(it, jt));
+            texCoordsArray.push(vec2(it-tt, jt));
+            texCoordsArray.push(vec2(it-tt, jt+tt));
+            texCoordsArray.push(vec2(it-tt, jt+tt));
+            texCoordsArray.push(vec2(it, jt+tt));
+            texCoordsArray.push(vec2(it, jt));
+        }
+}
+
+function configureTexture() {
+    var texture1 = gl.createTexture();
+    var image1 = new Image();
+    image1.src = "heightmap.png";
+    image1.onload = function() {
+            gl.bindTexture(gl.TEXTURE_2D, texture1);
+            //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image1);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+    textures.push(texture1);
+    
+    var texture2 = gl.createTexture();
+    image2 = new Image();
+    image2.src = "normalmap.png";
+    image2.onload = function() {
+            gl.bindTexture(gl.TEXTURE_2D, texture2);
+            //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image2);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+    textures.push(texture2);
+}
 
 /********  Interface  ********/
 
