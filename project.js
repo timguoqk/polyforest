@@ -10,7 +10,8 @@ var time_old = 0,
     next_sample_time = 0,
     sampleT = 1,
     analyser,
-    frequencyHistory = [];
+    frequencyHistory = [],
+    moveSpeed = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix,
     _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition,
     _shininess, _lightNum;
@@ -194,7 +195,7 @@ function animate(time) {
     var dt = time - time_old;
     time_old = time;
     for (var i = 0; i < locations.length; i++) {
-        locations[i] = mult(translate(0.0, 0.0, 0.001 * dt), locations[i]);
+        locations[i] = mult(translate(0.0, 0.0, 0.001 * moveSpeed * dt), locations[i]);
         if (key.left)
             locations[i] = mult(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)),
                 locations[i]);
@@ -203,7 +204,7 @@ function animate(time) {
                 locations[i]);
     }
     for (var i = 0; i < points.length; i++) {
-        points[i] = vec3(times(translate(0.0, 0.0, 0.001 * dt), vec4(points[
+        points[i] = vec3(times(translate(0.0, 0.0, 0.001 * moveSpeed * dt), vec4(points[
             i], 1.0)));
         if (key.left)
             points[i] = vec3(times(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)),
@@ -403,6 +404,8 @@ function analyzeAudio() {
     lights[0].specular[2] = frequency[0] / 7556 / 1.5;
 
     speed = frequency[5] / 21644;
+    moveSpeed = 0.5 + 5 * Math.pow(frequency[5], 3) / Math.pow(21644, 3);
+    console.log(moveSpeed);
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
