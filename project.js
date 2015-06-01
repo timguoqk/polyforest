@@ -123,6 +123,7 @@ window.onload = function() {
     document.addEventListener('keydown', keyDownHandler);
     document.addEventListener('keyup', keyUpHandler);
     document.addEventListener('click', clickHandler);
+    document.addEventListener('touchend', clickHandler);
     window.ondeviceorientation = gyroscopeHandler;
     document.getElementById('bgm-input').addEventListener('change', bgmInputHandler);
 };
@@ -172,7 +173,12 @@ function startGL() {
 
     // Set up audio
     try {
-        var ctx = new AudioContext();
+        var ctx;
+        if (typeof AudioContext=='undefined') {
+            ctx = new webkitAudioContext();
+        }
+        else
+            ctx = new AudioContext();
         var audio = document.getElementById($('.menu>.active.item.bgm').attr(
             'bgm-id'));
         var audioSrc = ctx.createMediaElementSource(audio);
@@ -405,7 +411,6 @@ function analyzeAudio() {
 
     speed = frequency[5] / 21644;
     moveSpeed = 0.5 + 5 * Math.pow(frequency[5], 2) / Math.pow(21644, 2);
-    console.log(moveSpeed);
 }
 
 function drawTree(a, b, c, d, e, f, factor1, factor2) {
@@ -462,8 +467,17 @@ function clickHandler(event) {
     if (lights.length == MAX_LIGHTS)
         return;
 
-    var clickLoc = vec4((event.clientX - 480) * 100 * (16.0 / 9) / 960, (285 -
-        event.clientY) * 100 / 570, -50, 1);
+    var x, y;
+    if (event.type == 'touchend') {
+        x = event.pageX;
+        y = event.pageY;
+    }
+    else {
+        x = event.clientX;
+        y = event.clientY;
+    }
+    var clickLoc = vec4((x - 480) * 100 * (16.0 / 9) / 960, (285 -
+        y) * 100 / 570, -50, 1);
     // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
 
     var color = randomColor({

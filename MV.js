@@ -192,39 +192,39 @@ function add( u, v )
 {
     var result = [];
 
-    if ( u.matrix && v.matrix ) {
-        if ( u.length != v.length ) {
-            throw "add(): trying to add matrices of different dimensions";
-        }
+    // if ( u.matrix && v.matrix ) {
+    //     if ( u.length != v.length ) {
+    //         throw "add(): trying to add matrices of different dimensions";
+    //     }
 
-        for ( var i = 0; i < u.length; ++i ) {
-            if ( u[i].length != v[i].length ) {
-                throw "add(): trying to add matrices of different dimensions";
-            }
-            result.push( [] );
-            for ( var j = 0; j < u[i].length; ++j ) {
-                result[i].push( u[i][j] + v[i][j] );
-            }
-        }
+    //     for ( var i = 0; i < u.length; ++i ) {
+    //         if ( u[i].length != v[i].length ) {
+    //             throw "add(): trying to add matrices of different dimensions";
+    //         }
+    //         result.push( [] );
+    //         for ( var j = 0; j < u[i].length; ++j ) {
+    //             result[i].push( u[i][j] + v[i][j] );
+    //         }
+    //     }
 
-        result.matrix = true;
+    //     result.matrix = true;
 
-        return result;
-    }
-    else if ( u.matrix && !v.matrix || !u.matrix && v.matrix ) {
-        throw "add(): trying to add matrix and non-matrix variables";
-    }
-    else {
-        if ( u.length != v.length ) {
-            throw "add(): vectors are not the same dimension";
-        }
+    //     return result;
+    // }
+    // else if ( u.matrix && !v.matrix || !u.matrix && v.matrix ) {
+    //     throw "add(): trying to add matrix and non-matrix variables";
+    // }
+    // else {
+    //     if ( u.length != v.length ) {
+    //         throw "add(): vectors are not the same dimension";
+    //     }
 
         for ( var i = 0; i < u.length; ++i ) {
             result.push( u[i] + v[i] );
         }
 
         return result;
-    }
+    // }
 }
 
 //----------------------------------------------------------------------------
@@ -233,41 +233,41 @@ function subtract( u, v )
 {
     var result = [];
 
-    if ( u.matrix && v.matrix ) {
-        if ( u.length != v.length ) {
-            throw "subtract(): trying to subtract matrices" +
-                " of different dimensions";
-        }
+    // if ( u.matrix && v.matrix ) {
+    //     if ( u.length != v.length ) {
+    //         throw "subtract(): trying to subtract matrices" +
+    //             " of different dimensions";
+    //     }
 
-        for ( var i = 0; i < u.length; ++i ) {
-            if ( u[i].length != v[i].length ) {
-                throw "subtract(): trying to subtact matrices" +
-                    " of different dimensions";
-            }
-            result.push( [] );
-            for ( var j = 0; j < u[i].length; ++j ) {
-                result[i].push( u[i][j] - v[i][j] );
-            }
-        }
+    //     for ( var i = 0; i < u.length; ++i ) {
+    //         if ( u[i].length != v[i].length ) {
+    //             throw "subtract(): trying to subtact matrices" +
+    //                 " of different dimensions";
+    //         }
+    //         result.push( [] );
+    //         for ( var j = 0; j < u[i].length; ++j ) {
+    //             result[i].push( u[i][j] - v[i][j] );
+    //         }
+    //     }
 
-        result.matrix = true;
+    //     result.matrix = true;
 
-        return result;
-    }
-    else if ( u.matrix && !v.matrix || !u.matrix && v.matrix ) {
-        throw "subtact(): trying to subtact  matrix and non-matrix variables";
-    }
-    else {
-        if ( u.length != v.length ) {
-            throw "subtract(): vectors are not the same length";
-        }
+    //     return result;
+    // }
+    // else if ( u.matrix && !v.matrix || !u.matrix && v.matrix ) {
+    //     throw "subtact(): trying to subtact  matrix and non-matrix variables";
+    // }
+    // else {
+    //     if ( u.length != v.length ) {
+    //         throw "subtract(): vectors are not the same length";
+    //     }
 
         for ( var i = 0; i < u.length; ++i ) {
             result.push( u[i] - v[i] );
         }
 
         return result;
-    }
+    // }
 }
 
 //----------------------------------------------------------------------------
