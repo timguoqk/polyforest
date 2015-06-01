@@ -8,7 +8,7 @@ var projection, inv_projection, camera, inv_camera;
 var locations = []; //locations of geometries
 var time_old = 0,
     next_sample_time = 0,
-    sampleT = 1,
+    sampleT = 0.1,
     analyser,
     frequencyHistory = [],
     moveSpeed = 1;
@@ -404,7 +404,7 @@ function analyzeAudio() {
     lights[0].specular[2] = frequency[0] / 7556 / 1.5;
 
     speed = frequency[5] / 21644;
-    moveSpeed = 0.5 + 5 * Math.pow(frequency[5], 3) / Math.pow(21644, 3);
+    moveSpeed = 0.5 + 5 * Math.pow(frequency[5], 2) / Math.pow(21644, 2);
     console.log(moveSpeed);
 }
 
