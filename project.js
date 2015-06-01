@@ -89,11 +89,11 @@ window.onload = function() {
     //gl.depthFunc(gl.LESS);
     gl.clearDepth(1.0);
 
-    drawTree(3, 5, -2, 4.2, -4.5, 3.8, 1.2, 0.7);
-    drawTree(-3.5, 2.5, -2.7, 4.0, -3.0, 2.0, 1.1, 0.9);
-    drawTree(-2.8, -3, -2.5, 5.2, -3.3, 0.9, 1.4, 0.8);
-    drawTree(2.5, -2.9, 5.2, -1.5, -2.4, 2.0, 1.5, 0.75);
-    drawTree(3.0, -3.2, 2.3, -3.5, -4.8, 0.5, 1.3, 1.3);
+    drawTree(3, 5, -2, 1.2, -4.5, 3.8, 1.2, 1.0, 0.7);
+    drawTree(-3.5, 2.5, -2.7, 4.0, -3.0, 2.0, 1.1, 1.3, 0.8);
+    drawTree(-2.8, -3, -2.5, 1.2, -3.3, 0.9, 1.4, 0.8, 0.9);
+    drawTree(2.5, -2.9, 5.2, -1.5, -2.4, 2.0, 1.5, 1.0, 0.8);
+    drawTree(3.0, -3.2, 2.3, -3.5, -4.8, 0.5, 1.3, 0.8, 0.9);
 
     groundSize = 200.0;
     geoNumber = 60; // Total number of geometries
@@ -408,7 +408,7 @@ function analyzeAudio() {
     console.log(moveSpeed);
 }
 
-function drawTree(a, b, c, d, e, f, factor1, factor2) {
+function drawTree(a, b, c, d, e, f, factor1, factor2, factor3) {
 
     var points = [];
     points.push(vec3(-0.5, 0, 0));
@@ -417,10 +417,10 @@ function drawTree(a, b, c, d, e, f, factor1, factor2) {
     points.push(add(vec3(a, 10.0 * factor1, b), vec3(-0.3, 0, 0)));
     points.push(add(vec3(a, 10.0 * factor1, b), vec3(0.3, 0, 0)));
     points.push(add(vec3(a, 10.0 * factor1, b), vec3(0, 0, 0.5)));
-    points.push(add(vec3(c, 20.0 * factor1, d), vec3(-0.15, 0, 0)));
-    points.push(add(vec3(c, 20.0 * factor1, d), vec3(0.15, 0, 0)));
-    points.push(add(vec3(c, 20.0 * factor1, d), vec3(0, 0, 0.25)));
-    points.push(vec3(e, 30 * factor2, f));
+    points.push(add(vec3(c, 20.0 * factor2, d), vec3(-0.15, 0, 0)));
+    points.push(add(vec3(c, 20.0 * factor2, d), vec3(0.15, 0, 0)));
+    points.push(add(vec3(c, 20.0 * factor2, d), vec3(0, 0, 0.25)));
+    points.push(vec3(e, 30 * factor3, f));
 
     var indices = [0, 2, 5, 0, 5, 3, 3, 5, 8, 3, 8, 6, 6, 8, 9, 2, 1, 5, 5,
         1, 4, 5, 4, 8, 8, 4, 7, 7, 8, 9, 0, 1, 3, 3, 1, 4, 3, 4, 6, 6,
