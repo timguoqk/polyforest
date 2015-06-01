@@ -131,7 +131,7 @@ function updatVelocity(sepDist, detDist) {
         if (detCounter > 0 && length(algVel > 0)) {
             algVel = (scale2(1.0/detCounter, algVel));
         }
-        var new_vel = add(add(scale2(3.0, algVel), cohVel), scale2(0.5, sepVel));
+        var new_vel = add(add(scale2(3.0, algVel), cohVel), scale2(1.5, sepVel));
         /*
         if (length(new_vel) > 0) {
             new_vel = normalize(new_vel);
@@ -142,7 +142,7 @@ function updatVelocity(sepDist, detDist) {
         */
         var diff = subtract(new_vel, velocity[i]);
         var diff_mag = length(diff);
-        if (diff_mag > 0) {
+        if (diff_mag > 0.1) {
             diff = scale2(0.1/diff_mag, diff);
         }
         new_vel = add(velocity[i], diff);
