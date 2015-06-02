@@ -16,7 +16,7 @@ var time_old = 0,
     moveSpeed = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix,
     _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition,
-    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _texTransform;
+    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _enableTexF, _texTransform;
 var key = {
     left: false,
     right: false,
@@ -170,6 +170,7 @@ function startGL() {
     _hTexture = gl.getUniformLocation(program, "hTexture");
     _nTexture = gl.getUniformLocation(program, "nTexture");
     _enableTex = gl.getUniformLocation(program, "enableTex");
+    _enableTexF = gl.getUniformLocation(program, "enableTexF");
     _texTransform = gl.getUniformLocation(program, "texTransform");
 
     // Create buffers
@@ -286,6 +287,7 @@ function render() {
     gl.uniformMatrix4fv(_texTransform, false, flatten(texTransform));
 
     gl.uniform1i(_enableTex, 1);    // enable texture
+    gl.uniform1i(_enableTexF, 1);
     gl.enableVertexAttribArray(_vTexCoord);
     gl.disableVertexAttribArray(_normal);
 
@@ -306,6 +308,7 @@ function render() {
     gl.enableVertexAttribArray(_vPosition);
 
     gl.uniform1i(_enableTex, 0);    // disable texture
+    gl.uniform1i(_enableTexF, 0);
     gl.disableVertexAttribArray(_vTexCoord);
     gl.enableVertexAttribArray(_normal);
 
