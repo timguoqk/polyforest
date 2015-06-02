@@ -25,7 +25,7 @@ var key = {
 };
 var colorTheme,
     MAX_LIGHTS; // This should match the macro in GLSL!
-var LIGHT_LIFE_EXPECTANCY = 200;
+var LIGHT_LIFE_EXPECTANCY = 250;
 // ----- For Particles ----- //
 
 var triangleBuffer;
@@ -199,7 +199,8 @@ function startGL() {
 
     colorTheme = $('.menu>.active.item.color').attr('color-id');
 
-    $('#options-column').fadeOut();
+    $('#options-column').fadeOut('slow');
+    $('img#banner').fadeOut('slow');
     animate(0);
 }
 
