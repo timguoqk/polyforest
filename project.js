@@ -16,7 +16,7 @@ var time_old = 0,
     moveSpeed = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix,
     _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition,
-    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _enableTexF, _texTransform;
+    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _texTransform;
 var key = {
     left: false,
     right: false,
@@ -26,7 +26,7 @@ var key = {
 var texLoc = vec4(0.0, 0.0, 0.0, 1.0);
 var colorTheme,
     MAX_LIGHTS; // This should match the macro in GLSL!
-var LIGHT_LIFE_EXPECTANCY = 200;
+var LIGHT_LIFE_EXPECTANCY = 250;
 var texRotate;
 var inv_texTranslate;
 // ----- For Particles ----- //
@@ -52,7 +52,7 @@ var far, near;
 
 var lights = [{
     position: vec4(0.0, 30.0, 0.0, 1.0),
-    ambient: vec4(0.0, 0.0, 0.0, 0.0),
+    ambient: vec4(0.2, 0.2, 0.2, 1.0),
     diffuse: vec4(0.0, 0.0, 0.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
     age: 0 // Lights will decay (except the global ambient light)
@@ -67,8 +67,8 @@ var materials = {
     },
     tree: {
         ambient: vec4(1.0, 1.0, 1.0, 1.0),
-        diffuse: vec4(0.5, 0.5, 0.5, 1.0),
-        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        diffuse: vec4(0.7, 0.7, 0.7, 1.0),
+        specular: vec4(0.3, 0.3, 0.3, 0.0),
         shininess: 0.001
     },
     particle: {
@@ -87,7 +87,7 @@ window.onload = function() {
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     // Set clear color to be black
-    gl.clearColor(0.2, 0.2, 0.2, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     // Enable depth buffer
     gl.enable(gl.DEPTH_TEST);
@@ -170,7 +170,6 @@ function startGL() {
     _hTexture = gl.getUniformLocation(program, "hTexture");
     _nTexture = gl.getUniformLocation(program, "nTexture");
     _enableTex = gl.getUniformLocation(program, "enableTex");
-    _enableTexF = gl.getUniformLocation(program, "enableTexF");
     _texTransform = gl.getUniformLocation(program, "texTransform");
 
     // Create buffers
@@ -187,9 +186,8 @@ function startGL() {
     // Set up audio
     try {
         var ctx;
-        if (typeof AudioContext=='undefined') {
+        if (typeof AudioContext=='undefined')
             ctx = new webkitAudioContext();
-        }
         else
             ctx = new AudioContext();
         var audio = document.getElementById($('.menu>.active.item.bgm').attr(
@@ -206,7 +204,8 @@ function startGL() {
 
     colorTheme = $('.menu>.active.item.color').attr('color-id');
 
-    $('#options-column').fadeOut();
+    $('#options-column').fadeOut('slow');
+    $('img#banner').fadeOut('slow');
     animate(0);
 }
 
@@ -287,7 +286,6 @@ function render() {
     gl.uniformMatrix4fv(_texTransform, false, flatten(texTransform));
 
     gl.uniform1i(_enableTex, 1);    // enable texture
-    gl.uniform1i(_enableTexF, 1);
     gl.enableVertexAttribArray(_vTexCoord);
     gl.disableVertexAttribArray(_normal);
 
@@ -308,7 +306,6 @@ function render() {
     gl.enableVertexAttribArray(_vPosition);
 
     gl.uniform1i(_enableTex, 0);    // disable texture
-    gl.uniform1i(_enableTexF, 0);
     gl.disableVertexAttribArray(_vTexCoord);
     gl.enableVertexAttribArray(_normal);
 
@@ -384,7 +381,6 @@ function render() {
 
         var faint = 0;
         for (var j = 0; j < 3; j++) {
-
             lights[i].ambient[j] = Math.max(0.0, lights[i].ambient[j] - 1 /
                 LIGHT_LIFE_EXPECTANCY);
             lights[i].diffuse[j] = Math.max(0.0, lights[i].diffuse[j] - 1 /
@@ -396,14 +392,11 @@ function render() {
             }
         }
         if (faint == 3) {
-            lights.splice(i,1);
-        }
-
-    }
-
-    for (var i = 1; i < lights.length; i++)
-        if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
             lights.splice(i, 1);
+            i --;
+            continue;
+        }
+    }
 }
 
 function analyzeAudio() {
@@ -444,16 +437,16 @@ function analyzeAudio() {
             frequency[j] = (frequency[j] + frequencyHistory[i][j]) / 2;
 
     // Apply frequency to lights[0]
-    lights[0].diffuse[0] = frequency[4] / 6000;
-    lights[0].diffuse[1] = frequency[4] / 4500;
-    lights[0].diffuse[2] = frequency[4] / 6200;
+    lights[0].diffuse[0] = frequency[4] / 5000;
+    lights[0].diffuse[1] = frequency[4] / 5000;
+    lights[0].diffuse[2] = frequency[4] / 5000;
 
-    lights[0].ambient[0] = frequency[5] / 38468 / 2;
-    lights[0].ambient[1] = frequency[5] / 38468;
-    lights[0].ambient[2] = frequency[5] / 38468 / 3;
+    // lights[0].ambient[0] = frequency[5] / 38468 / 2;
+    // lights[0].ambient[1] = frequency[5] / 38468 / 2;
+    // lights[0].ambient[2] = frequency[5] / 38468 / 2;
 
-    lights[0].specular[0] = frequency[0] / 7556;
-    lights[0].specular[1] = frequency[0] / 7556 / 2;
+    lights[0].specular[0] = frequency[0] / 7556 / 1.5;
+    lights[0].specular[1] = frequency[0] / 7556 / 1.5;
     lights[0].specular[2] = frequency[0] / 7556 / 1.5;
 
     speed = frequency[5] * 1.5 / 21644;
