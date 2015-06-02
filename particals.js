@@ -142,7 +142,7 @@ function updatVelocity(sepDist, detDist) {
         */
         var diff = subtract(new_vel, velocity[i]);
         var diff_mag = length(diff);
-        if (diff_mag > 0.1) {
+        if (diff_mag > 0.0) {
             diff = scale2(0.1/diff_mag, diff);
         }
         new_vel = add(velocity[i], diff);

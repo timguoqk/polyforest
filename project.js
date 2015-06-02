@@ -226,19 +226,21 @@ function animate(time) {
             points[i] = vec3(times(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)),
                 vec4(points[i], 1.0)));
     }
+    texTransform = mult(translate(0.0, 0.0, -0.001 * moveSpeed * dt), texTransform);
+    if (key.left)
+        texTransform = mult(texTransform, rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)));
+    else if (key.right)
+        texTransform = mult(texTransform, rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)));
+
+    //texTransform = mat4();
     if (next_sample_time < time) {
         next_sample_time += sampleT;
         analyzeAudio();
     }
 
     // TODO: adjust parameters!!!!!!!!!!!!!!
-    texTransform = mult(translate(0.0, 0.0, -0.002 / groundSize * dt), texTransform);
-    if (key.left)
-        texTransform = mult(texTransform, rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)));
-    else if (key.right)
-        texTransform = mult(texTransform, rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)));
-
-    updatVelocity(1.0, 100.0);
+    
+    updatVelocity(0.5, 100.0);
     updatePointsLocation();
     generateTrueLocation();
 
@@ -262,14 +264,13 @@ function render() {
     // bind heightmap
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+    gl.uniform1i(_hTexture, 0);
     // bind normalmap
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-
-    gl.uniform1i(_hTexture, 0);
     gl.uniform1i(_nTexture, 1);
 
-    gl.uniformMatrix4fv(_texTransform, false, flatten(mult(camera, texTransform)));
+    gl.uniformMatrix4fv(_texTransform, false, flatten(texTransform));
 
     gl.uniform1i(_enableTex, 1);    // enable texture
     gl.enableVertexAttribArray(_vTexCoord);
@@ -439,7 +440,7 @@ function analyzeAudio() {
     lights[0].specular[1] = frequency[0] / 7556 / 2;
     lights[0].specular[2] = frequency[0] / 7556 / 1.5;
 
-    speed = frequency[5] / 21644;
+    speed = frequency[5] * 1.5 / 21644;
     moveSpeed = 0.5 + 5 * Math.pow(frequency[5], 2) / Math.pow(21644, 2);
 }
 
@@ -468,7 +469,7 @@ function drawTree(a, b, c, d, e, f, factor1, factor2) {
 }
 
 function drawGround() {
-    var gg = 10.0;
+    var gg = 5.0;
     var tt = gg * 2 / groundSize;
     for (var ig = -groundSize, it = 0.5 ; ig < groundSize; ig += gg, it -= tt)
         for (var jg = -groundSize, jt = 0; jg < 0; jg += gg, jt += tt) {
