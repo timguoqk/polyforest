@@ -16,7 +16,7 @@ var time_old = 0,
     moveSpeed = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix,
     _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition,
-    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _texTransform;
+    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _enableTexF, _texTransform;
 var key = {
     left: false,
     right: false,
@@ -165,6 +165,7 @@ function startGL() {
     _hTexture = gl.getUniformLocation(program, "hTexture");
     _nTexture = gl.getUniformLocation(program, "nTexture");
     _enableTex = gl.getUniformLocation(program, "enableTex");
+    _enableTexF = gl.getUniformLocation(program, "enableTexF");
     _texTransform = gl.getUniformLocation(program, "texTransform");
 
     // Create buffers
@@ -273,6 +274,7 @@ function render() {
     gl.uniformMatrix4fv(_texTransform, false, flatten(texTransform));
 
     gl.uniform1i(_enableTex, 1);    // enable texture
+    gl.uniform1i(_enableTexF, 1);
     gl.enableVertexAttribArray(_vTexCoord);
     gl.disableVertexAttribArray(_normal);
 
@@ -293,6 +295,7 @@ function render() {
     gl.enableVertexAttribArray(_vPosition);
 
     gl.uniform1i(_enableTex, 0);    // disable texture
+    gl.uniform1i(_enableTexF, 0);
     gl.disableVertexAttribArray(_vTexCoord);
     gl.enableVertexAttribArray(_normal);
 
@@ -469,7 +472,7 @@ function drawTree(a, b, c, d, e, f, factor1, factor2, factor3) {
 }
 
 function drawGround() {
-    var gg = 5.0;
+    var gg = 1.0;
     var tt = gg * 2 / groundSize;
     for (var ig = -groundSize, it = 0.5 ; ig < groundSize; ig += gg, it -= tt)
         for (var jg = -groundSize, jt = 0; jg < 0; jg += gg, jt += tt) {
@@ -492,7 +495,7 @@ function drawGround() {
 function configureTexture() {
     var texture1 = gl.createTexture();
     var image1 = new Image();
-    image1.src = "heightmap.png";
+    image1.src = "heightmap3.jpg";
     image1.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture1);
             //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -506,7 +509,7 @@ function configureTexture() {
     
     var texture2 = gl.createTexture();
     image2 = new Image();
-    image2.src = "normalmap.png";
+    image2.src = "normalmap3.png";
     image2.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture2);
             //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);

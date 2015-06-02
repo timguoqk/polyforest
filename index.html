@@ -27,12 +27,12 @@
 		void main() {
 			//vec4 temp = texTransform * vec4(vTexCoord[0], 0.0, vTexCoord[1], 1.0);
 			vec4 temp = texTransform * vec4(vPosition, 1.0);
-			vec2 vTexCoordTransform = vec2(temp[0]/200.0, temp[2]/200.0);
+			vec2 vTexCoordTransform = vec2(temp[0]/300.0, temp[2]/300.0);
 			//vec2 vTexCoordTransform = vec2(temp[0], temp[2]);
 			fTex = vTexCoordTransform;
 			vec4 hSample = texture2D(hTexture, vTexCoordTransform);
 			float z;
-			z = hSample[0] * 15.0 - 10.0;
+			z = hSample[0] * 30.0 - 10.0;
 			vec4 nSample = texture2D(nTexture, vTexCoordTransform);
 
 			if (enableTex == 0) {
@@ -76,18 +76,20 @@
 		uniform sampler2D nTexture;
 		uniform sampler2D hTexture;
 		varying vec2 fTex;
+		uniform int enableTexF;
 		
 		void main()
 		{	
 			vec3 NN;
-			
+			if (enableTexF == 0) {
+				NN = N;
+			} else {
 				vec4 nSample = texture2D(nTexture, fTex);
 				vec3 NNN = nSample.xyz  * 2.0 - vec3(1.0, 1.0, 1.0);
 				NN = vec3(NNN[0], NNN[2], -NNN[1]);
 				NN = normalize( NN);
-				//N = normalize(normalMatrix * vec3(0, 0, 1));
+			}
 			
-
 			vec4 fColor = vec4(0.0, 0.0, 0.0, 0.0);
 			for (int i = 0; i < MAX_LIGHTS; i ++) {
 				if (i > lightNum)
