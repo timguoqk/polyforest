@@ -2,7 +2,7 @@
 
 ![](https://github.com/ucla-sp15-cs174a/team18-term-project/blob/master/banner.png)
 
-Explore the PolyForest and *don't look back*.
+Explore the PolyForest with your favorite music and *don't look back*.
 
 **Please open using Firefox. Or use <http://timguoqk.me/team18-term-project/>.**
 
@@ -16,6 +16,7 @@ Explore the PolyForest and *don't look back*.
 
 - Use left and right arrow keys to navigate
 - Click to add light
+- You can only move forward. The speed is dependent on the music.
 - On mobile device, use gyroscope and touch screen to interact
 - You can choose music you like using the sidebar
 - Other options are also available in the sidebar
