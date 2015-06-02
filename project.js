@@ -16,7 +16,7 @@ var time_old = 0,
     moveSpeed = 1;
 var _vPosition, _projection, _modelView, _normal, _normalMatrix,
     _ambientProduct, _diffuseProduct, _specularProduct, _lightPosition,
-    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _enableTexF, _texTransform;
+    _shininess, _lightNum, _vTexCoord, _hTexture, _nTexture, _enableTex, _texTransform;
 var key = {
     left: false,
     right: false,
@@ -49,7 +49,7 @@ var far, near;
 
 var lights = [{
     position: vec4(0.0, 0.0, 1.0, 0.0),
-    ambient: vec4(0.0, 0.0, 0.0, 0.0),
+    ambient: vec4(0.2, 0.2, 0.2, 1.0),
     diffuse: vec4(0.0, 0.0, 0.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
     age: 0 // Lights will decay (except the global ambient light)
@@ -64,8 +64,8 @@ var materials = {
     },
     tree: {
         ambient: vec4(1.0, 1.0, 1.0, 1.0),
-        diffuse: vec4(0.5, 0.5, 0.5, 1.0),
-        specular: vec4(0.0, 0.0, 0.0, 0.0),
+        diffuse: vec4(0.7, 0.7, 0.7, 1.0),
+        specular: vec4(0.3, 0.3, 0.3, 0.0),
         shininess: 0.001
     },
     particle: {
@@ -84,7 +84,7 @@ window.onload = function() {
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     // Set clear color to be black
-    gl.clearColor(0.2, 0.2, 0.2, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     // Enable depth buffer
     gl.enable(gl.DEPTH_TEST);
@@ -165,7 +165,6 @@ function startGL() {
     _hTexture = gl.getUniformLocation(program, "hTexture");
     _nTexture = gl.getUniformLocation(program, "nTexture");
     _enableTex = gl.getUniformLocation(program, "enableTex");
-    _enableTexF = gl.getUniformLocation(program, "enableTexF");
     _texTransform = gl.getUniformLocation(program, "texTransform");
 
     // Create buffers
@@ -182,9 +181,8 @@ function startGL() {
     // Set up audio
     try {
         var ctx;
-        if (typeof AudioContext=='undefined') {
+        if (typeof AudioContext=='undefined')
             ctx = new webkitAudioContext();
-        }
         else
             ctx = new AudioContext();
         var audio = document.getElementById($('.menu>.active.item.bgm').attr(
@@ -274,7 +272,6 @@ function render() {
     gl.uniformMatrix4fv(_texTransform, false, flatten(texTransform));
 
     gl.uniform1i(_enableTex, 1);    // enable texture
-    gl.uniform1i(_enableTexF, 1);
     gl.enableVertexAttribArray(_vTexCoord);
     gl.disableVertexAttribArray(_normal);
 
@@ -295,7 +292,6 @@ function render() {
     gl.enableVertexAttribArray(_vPosition);
 
     gl.uniform1i(_enableTex, 0);    // disable texture
-    gl.uniform1i(_enableTexF, 0);
     gl.disableVertexAttribArray(_vTexCoord);
     gl.enableVertexAttribArray(_normal);
 
@@ -371,7 +367,6 @@ function render() {
 
         var faint = 0;
         for (var j = 0; j < 3; j++) {
-
             lights[i].ambient[j] = Math.max(0.0, lights[i].ambient[j] - 1 /
                 LIGHT_LIFE_EXPECTANCY);
             lights[i].diffuse[j] = Math.max(0.0, lights[i].diffuse[j] - 1 /
@@ -383,14 +378,11 @@ function render() {
             }
         }
         if (faint == 3) {
-            lights.splice(i,1);
-        }
-
-    }
-
-    for (var i = 1; i < lights.length; i++)
-        if (lights[i].age == LIGHT_LIFE_EXPECTANCY)
             lights.splice(i, 1);
+            i --;
+            continue;
+        }
+    }
 }
 
 function analyzeAudio() {
@@ -431,16 +423,16 @@ function analyzeAudio() {
             frequency[j] = (frequency[j] + frequencyHistory[i][j]) / 2;
 
     // Apply frequency to lights[0]
-    lights[0].diffuse[0] = frequency[4] / 6000;
-    lights[0].diffuse[1] = frequency[4] / 4500;
-    lights[0].diffuse[2] = frequency[4] / 6200;
+    lights[0].diffuse[0] = frequency[4] / 5000;
+    lights[0].diffuse[1] = frequency[4] / 5000;
+    lights[0].diffuse[2] = frequency[4] / 5000;
 
-    lights[0].ambient[0] = frequency[5] / 38468 / 2;
-    lights[0].ambient[1] = frequency[5] / 38468;
-    lights[0].ambient[2] = frequency[5] / 38468 / 3;
+    // lights[0].ambient[0] = frequency[5] / 38468 / 2;
+    // lights[0].ambient[1] = frequency[5] / 38468 / 2;
+    // lights[0].ambient[2] = frequency[5] / 38468 / 2;
 
-    lights[0].specular[0] = frequency[0] / 7556;
-    lights[0].specular[1] = frequency[0] / 7556 / 2;
+    lights[0].specular[0] = frequency[0] / 7556 / 1.5;
+    lights[0].specular[1] = frequency[0] / 7556 / 1.5;
     lights[0].specular[2] = frequency[0] / 7556 / 1.5;
 
     speed = frequency[5] * 1.5 / 21644;
@@ -472,7 +464,7 @@ function drawTree(a, b, c, d, e, f, factor1, factor2, factor3) {
 }
 
 function drawGround() {
-    var gg = 1.0;
+    var gg = 5.0;
     var tt = gg * 2 / groundSize;
     for (var ig = -groundSize, it = 0.5 ; ig < groundSize; ig += gg, it -= tt)
         for (var jg = -groundSize, jt = 0; jg < 0; jg += gg, jt += tt) {
@@ -495,7 +487,7 @@ function drawGround() {
 function configureTexture() {
     var texture1 = gl.createTexture();
     var image1 = new Image();
-    image1.src = "heightmap3.jpg";
+    image1.src = "heightmap.png";
     image1.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture1);
             //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -509,7 +501,7 @@ function configureTexture() {
     
     var texture2 = gl.createTexture();
     image2 = new Image();
-    image2.src = "normalmap3.png";
+    image2.src = "normalmap.png";
     image2.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture2);
             //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
