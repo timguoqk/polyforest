@@ -23,9 +23,12 @@ var key = {
     up: false,
     down: false
 };
+var texLoc = vec4(0.0, 0.0, 0.0, 1.0);
 var colorTheme,
     MAX_LIGHTS; // This should match the macro in GLSL!
 var LIGHT_LIFE_EXPECTANCY = 200;
+var texRotate;
+var inv_texTranslate;
 // ----- For Particles ----- //
 
 var triangleBuffer;
@@ -48,7 +51,7 @@ var far, near;
 // ----- For Particles ----- //
 
 var lights = [{
-    position: vec4(0.0, 0.0, 1.0, 0.0),
+    position: vec4(0.0, 30.0, 0.0, 1.0),
     ambient: vec4(0.0, 0.0, 0.0, 0.0),
     diffuse: vec4(0.0, 0.0, 0.0, 0.0),
     specular: vec4(0.0, 0.0, 0.0, 0.0),
@@ -106,7 +109,9 @@ window.onload = function() {
     inv_camera = inverseCamera(camera);
     inv_projection = inverseProjection(projection);
     texTransform = mat4();
-
+    texRotate = mat4();
+    texTranslate = mat4();
+    inv_texTranslate = mat4();
     drawGround();
     configureTexture();
 
@@ -227,12 +232,20 @@ function animate(time) {
             points[i] = vec3(times(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)),
                 vec4(points[i], 1.0)));
     }
-    texTransform = mult(translate(0.0, 0.0, -0.001 * moveSpeed * dt), texTransform);
-    if (key.left)
-        texTransform = mult(texTransform, rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)));
-    else if (key.right)
-        texTransform = mult(texTransform, rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)));
+    
+    texTransform = mult(translate(vec3(times(texRotate, vec4(0.0, 0.0, -0.001 * moveSpeed * dt, 1.0)))), texTransform);
 
+    //inv_texTranslate = mult(translate(0.0, 0.0, 0.001 * moveSpeed *dt), inv_texTranslate);
+    if (key.left) {
+        texLoc = times(texTransform, vec4(0.0, 0.0, 0.0, 1.0));
+        texRotate = mult(rotate(0.02 * dt , vec3(0.0, 1.0, 0.0)), texRotate);
+        texTransform = mult(translate(vec3(texLoc)), mult(rotate(0.02 * dt, vec3(0.0, 1.0, 0.0)), mult(translate(negate(vec3(texLoc))), texTransform)));
+    }
+    else if (key.right) {
+        texLoc = times(texTransform, vec4(0.0, 0.0, 0.0, 1.0));
+        texRotate = mult(rotate(-0.02 * dt , vec3(0.0, 1.0, 0.0)), texRotate);
+         texTransform = mult(translate(vec3(texLoc)), mult(rotate(-0.02 * dt, vec3(0.0, 1.0, 0.0)), mult(translate(negate(vec3(texLoc))), texTransform)));
+    }
     //texTransform = mat4();
     if (next_sample_time < time) {
         next_sample_time += sampleT;
@@ -472,7 +485,7 @@ function drawTree(a, b, c, d, e, f, factor1, factor2, factor3) {
 }
 
 function drawGround() {
-    var gg = 1.0;
+    var gg = 5.0;
     var tt = gg * 2 / groundSize;
     for (var ig = -groundSize, it = 0.5 ; ig < groundSize; ig += gg, it -= tt)
         for (var jg = -groundSize, jt = 0; jg < 0; jg += gg, jt += tt) {
@@ -495,7 +508,7 @@ function drawGround() {
 function configureTexture() {
     var texture1 = gl.createTexture();
     var image1 = new Image();
-    image1.src = "heightmap3.jpg";
+    image1.src = "heightmap.png";
     image1.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture1);
             //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -509,7 +522,7 @@ function configureTexture() {
     
     var texture2 = gl.createTexture();
     image2 = new Image();
-    image2.src = "normalmap3.png";
+    image2.src = "normalmap.png";
     image2.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture2);
             //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -560,7 +573,7 @@ function clickHandler(event) {
         y = event.clientY;
     }
     var clickLoc = vec4((x - 480) * 100 * (16.0 / 9) / 960, (285 -
-        y) * 100 / 570, -50, 1);
+        y) * 100 / 570 + 30, -50, 1);
     // console.log('For (' +event.clientX + ', ' + event.clientY + ') the clickLoc is ' + clickLoc);
 
     var color = randomColor({

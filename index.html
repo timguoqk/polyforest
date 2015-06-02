@@ -27,39 +27,51 @@
 		void main() {
 			//vec4 temp = texTransform * vec4(vTexCoord[0], 0.0, vTexCoord[1], 1.0);
 			vec4 temp = texTransform * vec4(vPosition, 1.0);
-			vec2 vTexCoordTransform = vec2(temp[0]/300.0, temp[2]/300.0);
+			vec2 vTexCoordTransform = vec2(temp[0]/50.0, -temp[2]/50.0);
 			//vec2 vTexCoordTransform = vec2(temp[0], temp[2]);
 			fTex = vTexCoordTransform;
 			vec4 hSample = texture2D(hTexture, vTexCoordTransform);
 			float z;
-			z = hSample[0] * 30.0 - 10.0;
+			z = hSample[0] * 10.0 - 5.0;
 			vec4 nSample = texture2D(nTexture, vTexCoordTransform);
 
 			if (enableTex == 0) {
 				gl_Position = projection * modelView * vec4(vPosition, 1.);
+				pos = (modelView * vec4(vPosition, 1.)).xyz;
+				E = -normalize(pos);
+				N = normalize(normalMatrix * normal);
+				for (int i = 0; i < MAX_LIGHTS; i ++) {
+					if (lightPosition[i].z == 0.0)
+						L[i] = normalize(lightPosition[i].xyz);
+					else
+						L[i] = normalize(lightPosition[i].xyz - pos);
+				}
 			} else {
 				gl_Position = projection * modelView * vec4(vPosition[0], z, vPosition[2], 1.);
+				pos = (vec4(vPosition[0], vPosition[1], vPosition[2], 1.0)).xyz;
+				E = -normalize(pos);
+				// vec3 NNN = nSample.xyz  * 2.0 - vec3(1.0, 1.0, 1.0);
+				// N = vec3(NNN[0], NNN[2], -NNN[1]);
+				// N = normalize(normalMatrix * N);
+				
+				// vec4 NN = texture2D(nTexture, vTexCoordTransform);
+				// N = normalize(2.0 * NN.xyz - 1.0);
+
+				vec3 eyePosition = pos;
+				for (int i = 0; i < MAX_LIGHTS; i++) {
+					vec3 eyeLightPos = (modelView * lightPosition[i]).xyz;
+					vec3 NN = normalize(normalMatrix * vec3(0.0, 1.0, 0.0));
+    				vec3 TT = normalize(normalMatrix * vec3(1.0, 0.0, 0.0));
+    				vec3 BB = cross(NN, TT);
+
+    				L[i].x = dot(TT, eyeLightPos - pos);
+    				L[i].y = dot(BB, eyeLightPos - pos);
+    				L[i].z = dot(NN, eyeLightPos - pos);
+
+    				L[i] = normalize(L[i]);
+				}
 			}
-			if (enableTex == 0) {
-				pos = (modelView * vec4(vPosition, 1.)).xyz;
-			} else {
-				pos = (vec4(vPosition[0], z, vPosition[2], 1.0)).xyz;
-			}
-			E = -normalize(pos);
-			if (enableTex == 0) {
-				N = normalize(normalMatrix * normal);
-			} else {
-				vec3 NNN = nSample.xyz  * 2.0 - vec3(1.0, 1.0, 1.0);
-				N = vec3(NNN[0], NNN[2], -NNN[1]);
-				N = normalize(normalMatrix * N);
-				//N = normalize(normalMatrix * vec3(0, 0, 1));
-			}
-			for (int i = 0; i < MAX_LIGHTS; i ++) {
-				if (lightPosition[i].z == 0.0)
-					L[i] = normalize(lightPosition[i].xyz);
-				else
-					L[i] = normalize(lightPosition[i].xyz - pos);
-			}
+			
 		}
 	</script>
 	<script id="fragment-shaderH" type="x-shader/x-fragment">
@@ -84,10 +96,15 @@
 			if (enableTexF == 0) {
 				NN = N;
 			} else {
-				vec4 nSample = texture2D(nTexture, fTex);
-				vec3 NNN = nSample.xyz  * 2.0 - vec3(1.0, 1.0, 1.0);
-				NN = vec3(NNN[0], NNN[2], -NNN[1]);
-				NN = normalize( NN);
+				// vec4 nSample = texture2D(nTexture, fTex);
+				// vec3 NNN = nSample.xyz  * 2.0 - vec3(1.0, 1.0, 1.0);
+				// NN = vec3(NNN[0], NNN[2], -NNN[1]);
+				// NN = normalize( NN);
+				
+				vec4 NNN = texture2D(nTexture, fTex);
+				NN = normalize(2.0 * NNN.xyz - 1.0);
+				
+				// NN = N;
 			}
 			
 			vec4 fColor = vec4(0.0, 0.0, 0.0, 0.0);
