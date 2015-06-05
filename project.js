@@ -46,7 +46,7 @@ var speed = 1.0;
 var box_size = 200.0;
 var points = [];
 var true_location = [];
-var NumPoints = 250;
+var NumPoints = 200;
 var far, near;
 // ----- For Particles ----- //
 
@@ -149,7 +149,7 @@ function startGL() {
     }
     else {
         MAX_LIGHTS = 5;
-        NumPoints = 20;
+        NumPoints = 10;
         program = initShaders(gl, "vertex-shaderL", "fragment-shaderL")
         gl.useProgram(program);   
     }
