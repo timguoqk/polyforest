@@ -4,7 +4,7 @@
 
 Explore the PolyForest with your favorite music and *don't look back*.
 
-**Please open using Firefox. Or use <http://timguoqk.me/team18-term-project/>.**
+**Please open using Firefox. Or use <http://timguoqk.me/polyforest/>.**
 
 ## Advanced Features
 
